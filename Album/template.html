@@ -519,15 +519,47 @@ function setTexts(){
 }
 
 /* Ordenação de meses (PT/EN, sem acentos) */
-function monthOrder(a,b){
-  const meses=["janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro",
-               "january","february","march","april","may","june","july","august","september","october","november","december"];
-  const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  const ai=meses.indexOf(norm(a)), bi=meses.indexOf(norm(b));
-  if(ai!==-1 && bi!==-1) return ai-bi;
-  if(ai!==-1) return -1; if(bi!==-1) return 1;
-  return a.localeCompare(b,"pt",{numeric:true});
+function monthOrder(a, b) {
+    const monthNames = [
+        "janeiro","fevereiro","marco","abril","maio","junho",
+        "julho","agosto","setembro","outubro","novembro","dezembro",
+        "january","february","march","april","may","june",
+        "july","august","september","october","november","december"
+    ];
+
+    const normalize = s =>
+        s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const getMonthIndex = name => {
+        const norm = normalize(name);
+        for (let i = 0; i < monthNames.length; i++) {
+            if (norm.includes(monthNames[i])) {
+                return i % 12; // devolve 0–11
+            }
+        }
+        return -1; // não tem mês no nome
+    };
+
+    // Ecografias sempre primeiro
+    if (normalize(a) === "ecografias") return -1;
+    if (normalize(b) === "ecografias") return 1;
+
+    const ma = getMonthIndex(a);
+    const mb = getMonthIndex(b);
+
+    // Ambos têm mês → ordenar por mês
+    if (ma !== -1 && mb !== -1) return ma - mb;
+
+    // Só A tem mês → A vem antes
+    if (ma !== -1) return -1;
+
+    // Só B tem mês → B vem antes
+    if (mb !== -1) return 1;
+
+    // Nenhum tem mês → ordem alfabética normal
+    return a.localeCompare(b, "pt", { numeric: true });
 }
+
 
 /* Formatação de datas (pt-PT / en-GB) */
 function fmtDate(iso){
@@ -607,18 +639,44 @@ function matchFilterByName(name, filter = currentFilter) {
     return true;
 }
 
+function ecoOrder(a, b) {
+    const pa = parseInt(a.name.split(" - ")[0]) || 0;
+    const pb = parseInt(b.name.split(" - ")[0]) || 0;
 
-/* Manifest -> lista plana (global) */
-function buildFlat(){
-  flatList=[];
-  if(typeof manifest==='undefined'){ return; }
-  Object.keys(manifest).sort((a,b)=>a-b).forEach(y=>{
-    Object.keys(manifest[y]).sort(monthOrder).forEach(m=>{
-      manifest[y][m].slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(it=>{
-        flatList.push({year:y,month:m,name:it.name,date:it.date,src:it.path});
-      });
+    if (pa !== pb) return pa - pb;
+
+    return new Date(a.date) - new Date(b.date);
+}
+
+
+
+function buildFlat() {
+    flatList = [];
+    if (typeof manifest === 'undefined') return;
+
+    Object.keys(manifest).sort((a, b) => a - b).forEach(y => {
+
+        Object.keys(manifest[y]).sort(monthOrder).forEach(m => {
+
+            let items = manifest[y][m].slice();
+
+            if (m.toLowerCase() === "ecografias") {
+                items.sort(ecoOrder);
+            } else {
+                items.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            items.forEach(it => {
+                flatList.push({
+                    year: y,
+                    month: m,
+                    name: it.name,
+                    date: it.date,
+                    src: it.path
+                });
+            });
+        });
     });
-  });
 }
 
 /* --------- Renderização com filtro inteligente (A1) --------- */
@@ -692,36 +750,47 @@ function getFilteredMonths(y){
 
 /* Render meses */
 function renderMonths(y){
-  monthsEl.innerHTML='';
-  const validMonths = getFilteredMonths(y); // meses com conteúdo filtrado
-  const allMonths   = Object.keys(manifest[y] || {}).sort(monthOrder);
+    monthsEl.innerHTML='';
 
-  allMonths.forEach(m=>{
-    const btn=document.createElement('button');
-    btn.textContent = m.charAt(0).toUpperCase() + m.slice(1);
+    // lista completa dos meses ordenados
+    let allMonths   = Object.keys(manifest[y] || {}).sort(monthOrder);
 
-    const has = validMonths.includes(m);
-    if(!has){
-      btn.disabled = true;
-      btn.style.opacity = "0.35";
-      btn.style.cursor = "not-allowed";
-    } else {
-      btn.onclick=()=>{
-        currentMonth=m;
-        monthsEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        renderThumbs(y,m);
-      };
+    // se existir Ecografias → mete no topo
+    const idxEco = allMonths.findIndex(m => m.toLowerCase() === 'ecografias');
+    if (idxEco > -1) {
+        allMonths.splice(idxEco, 1);
+        allMonths.unshift('Ecografias');
     }
 
-    monthsEl.appendChild(btn);
-  });
+    const validMonths = getFilteredMonths(y);
 
-  if(currentMonth && !validMonths.includes(currentMonth)){
-    currentMonth=null; thumbsEl.innerHTML='';
-  }
+    allMonths.forEach(m => {
+        const btn = document.createElement('button');
+        btn.textContent = m.charAt(0).toUpperCase() + m.slice(1);
+
+        const has = validMonths.includes(m);
+
+        if (!has) {
+            btn.disabled = true;
+            btn.style.opacity = "0.35";
+            btn.style.cursor = "not-allowed";
+        } else {
+            btn.onclick = () => {
+                currentMonth = m;
+                monthsEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderThumbs(y, m);
+            };
+        }
+
+        monthsEl.appendChild(btn);
+    });
+
+    if(currentMonth && !validMonths.includes(currentMonth)){
+        currentMonth=null;
+        thumbsEl.innerHTML='';
+    }
 }
-
 
 /* --------- Filtros UI --------- */
 let currentFilter="all";
@@ -739,49 +808,53 @@ fltAll.onclick   = ()=>setFilter("all");
 fltPhotos.onclick= ()=>setFilter("photos");
 fltVideos.onclick= ()=>setFilter("videos");
 
-/* --------- Thumbs (respeita filtro) --------- */
-function renderThumbs(y,m){
-  thumbsEl.innerHTML='';
-  let list=(manifest[y][m]||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  list = list.filter(it => matchFilterByName(it.name, currentFilter));
+function renderThumbs(y, m) {
+    thumbsEl.innerHTML = "";
 
-  if(m.toLowerCase()==='ecografias'){
-    let currentDateGroup='';
-    list.forEach(it=>{
-      const dateLabel=fmtDate(it.date);
-      if(dateLabel!==currentDateGroup){
-        currentDateGroup=dateLabel;
-        const sep=document.createElement('div');
-        sep.textContent='📅 '+dateLabel;
-        sep.style='margin:8px 0 4px;color:var(--accent);font-weight:600;';
-        thumbsEl.appendChild(sep);
-      }
-      addThumbCard(y,m,it);
-    });
-    return;
-  }
+    let list = manifest[y][m].slice().filter(it =>
+        matchFilterByName(it.name, currentFilter)
+    );
 
-// Modo normal: separador discreto entre dias diferentes
-let currentDate = '';
-let firstItem = true;
+    if (m.toLowerCase() === "ecografias") {
+        list.sort(ecoOrder);
 
-list.forEach(it => {
-  // verifica se o dia mudou
-  if (it.date !== currentDate) {
-    // evita adicionar separador antes do primeiro item
-    if (!firstItem) {
-      const sep = document.createElement('div');
-      sep.className = 'day-separator';
-      thumbsEl.appendChild(sep);
+        let group = "";
+
+        list.forEach(it => {
+            const lbl = fmtDate(it.date);
+            if (lbl !== group) {
+                group = lbl;
+                const sep = document.createElement("div");
+                sep.textContent = "📅 " + lbl;
+                sep.style = "margin:8px 0 4px;color:var(--accent);font-weight:600;";
+                thumbsEl.appendChild(sep);
+            }
+            addThumbCard(y, m, it);
+        });
+
+        return;
     }
-    currentDate = it.date;
-  }
 
-  addThumbCard(y, m, it);
-  firstItem = false;
-});
+    list.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+    let current = "";
+    let first = true;
+
+    list.forEach(it => {
+        if (it.date !== current) {
+            if (!first) {
+                const sep = document.createElement("div");
+                sep.className = "day-separator";
+                thumbsEl.appendChild(sep);
+            }
+            current = it.date;
+        }
+
+        addThumbCard(y, m, it);
+        first = false;
+    });
 }
+
 
 function addThumbCard(y, m, it) {
     const card = document.createElement('div');
