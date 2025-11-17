@@ -75,11 +75,14 @@ Perfect for parents capturing their children's growth and memories.
      ```
      > 💡 A opção `[i]` mostra explicações detalhadas sobre cada função.
 
-3. 📁 **Organiza e cria o teu álbum**:
-   - **[1]** organiza automaticamente milhares de fotos por pastas **Ano/Mês** (sem duplicados).  
-   - **[2]** cria ou atualiza o álbum HTML (`Ver album.html` / `View album.html`).  
-   - **[3]** repõe o projeto ao estado original, sem apagar as tuas fotos.  
-   - **[i]** mostra ajuda e instruções.
+3. 📁 **Organiza e cria o teu álbum:**
+
+- **[1]** organiza automaticamente milhares de fotos por pastas **Ano/Mês** (sem duplicados).  
+- **[2]** cria ou atualiza o álbum HTML (`Ver album.html` / `View album.html`).  
+  > 🔍 *Nota:* Se existirem muitas fotos, este processo pode demorar um pouco na primeira execução devido à criação das thumbnails.  
+  > ⚡ *Nas próximas vezes será muito mais rápido*, graças ao sistema de **cache**, que evita reprocessar ficheiros já lidos — só gera thumbnails para novas fotos.  
+- **[3]** repõe o projeto ao estado original, **sem apagar as tuas fotos**.  
+- **[i]** mostra ajuda e instruções.
 
 4. 💾 O ficheiro `Ver album.html` será criado automaticamente **ao lado da pasta `Album/`.**
 
@@ -109,11 +112,14 @@ Perfect for parents capturing their children's growth and memories.
      ```
      > 💡 Option `[i]` displays detailed explanations about each feature.
 
-3. 📁 **Organize and generate your album**:
-   - **[1]** automatically sorts thousands of photos by **Year/Month** (ignores duplicates).  
-   - **[2]** creates or updates your HTML album (`View album.html` / `Ver album.html`).  
-   - **[3]** resets the project to its original state without deleting your photos.  
-   - **[i]** shows help and instructions.
+3. 📁 **Organize and generate your album:**
+
+- **[1]** automatically sorts thousands of photos into **Year/Month** folders (no duplicates).  
+- **[2]** creates or updates the HTML album (`View album.html` / `Ver album.html`).  
+  > 🔍 *Note:* If you have many photos, the first run may take a while because thumbnails must be created.  
+  > ⚡ *Future updates will be much faster*, thanks to the **cache system**, which skips already-processed files — thumbnails are only generated for new photos.  
+- **[3]** resets the project to its original state, **without deleting your photos**.  
+- **[i]** displays help and instructions.
 
 4. 💾 The file `View album.html` will be automatically created **next to the `Album/` folder.**
 
