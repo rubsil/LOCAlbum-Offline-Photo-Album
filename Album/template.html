@@ -151,10 +151,16 @@ nav#years{
   margin-top:0px;       /* como pediste */
   margin-bottom:4px;
 }
-nav#months{
-  margin-top:0px;       /* como pediste */
-  margin-bottom:4px;
+nav#months {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;              /* 👈 espaçamento idêntico aos ANOS */
+  margin-top: 0px;
+  margin-bottom: 4px;
+  scrollbar-width: thin;
 }
+
 
 /* ---------- Área principal ---------- */
 main.viewer{
@@ -668,12 +674,14 @@ function buildFlat() {
 
             items.forEach(it => {
                 flatList.push({
-                    year: y,
-                    month: m,
-                    name: it.name,
-                    date: it.date,
-                    src: it.path
-                });
+   		year: y,
+ 		month: m,
+  		name: it.name,
+  		date: it.date,
+  		src: it.path,                 // original grande
+  		thumb: it.thumb || it.path    // thumbnail (ou original, se faltar)
+		});
+
             });
         });
     });
@@ -867,7 +875,7 @@ function addThumbCard(y, m, it) {
         ? document.createElement('video')
         : document.createElement('img');
 
-    el.src = it.path;
+    el.src = encodeURI(it.thumb || it.path);
 
     if (el.tagName === 'IMG') {
         el.loading = 'lazy';
@@ -942,7 +950,7 @@ function show(i){
   const ext=it.name.split('.').pop().toLowerCase();
   const isVideo = VIDEO_EXTS.includes(ext);
   const el = isVideo ? document.createElement('video') : document.createElement('img');
-  el.src=it.src;
+  el.src = encodeURI(it.src);
   if(el.tagName==='VIDEO'){
     const wasRunning=!!timer; if(wasRunning) stopSS();
     el.controls=true; el.playsInline=true; el.preload="metadata"; el.muted=false; el.autoplay=true;
@@ -973,8 +981,9 @@ if(tsel) {
   const preloadByItem=(item)=>{
     if(!item) return;
     const ext=item.name.split('.').pop().toLowerCase();
-    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src=item.src; v.preload="metadata"; }
-    else { const img=new Image(); img.src=item.src; }
+    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src = encodeURI(item.src);
+; v.preload="metadata"; }
+    else { const img=new Image(); img.src=encodeURI(item.src); }
   };
   if(currentMonthList.length){
     const pIdx = currentMonthList.findIndex(x=>x.name===it.name);
