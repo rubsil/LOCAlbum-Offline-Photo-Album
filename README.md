@@ -1,4 +1,5 @@
-# 📸 LOCAlbum - Offline Photo Album
+# 📸 LOCAlbum – Offline Photo Album  
+### 🚀 v1.3 — Fast & Smooth Edition (Thumbnails + Cache)
 
 <p align="center">
   <img src="https://i.imgur.com/2r820LY.png" alt="LOCAlbum Logo" width="200"/>
@@ -6,32 +7,37 @@
 
 ---
 
-## 🆕 v1.2 — Unified Manager Edition (Single .BAT Version)
-> ✅ Todas as funções num só ficheiro bilingue — **`LOCALBUM - Manager.bat`**  
-> 📁 Ficheiros técnicos ficam ocultos automaticamente após a primeira execução.
+## 🆕 Novidades da versão 1.3
+A maior atualização até hoje — o álbum está agora muito mais rápido, suave e eficiente.
+
+### 🔥 **Principais novidades**
+- 🖼️ **Thumbnails automáticos ultra-rápidos**  
+  As fotos carregam instantaneamente no álbum, mesmo com milhares de ficheiros.
+  
+- ⚡ **Cache inteligente (incremental)**  
+  O script guarda datas e hashes das fotos/vídeos — só processa novos ficheiros.
+  
+- 📊 **Barra de progresso real**  
+  Mostra o estado exato ao gerar/atualizar o álbum.
+  
+- 📁 **Thumbnails ocultos automaticamente**  
+  A pasta `Album/Thumbnails` fica invisível ao utilizador.
 
 ---
 
-**🇵🇹 LOCAlbum** é uma aplicação leve e totalmente offline que transforma as tuas pastas de fotos num álbum moderno e interativo — com visualização por **anos e meses**, **slideshow automático**, e **temas personalizáveis**.  
-Funciona **sem internet**, diretamente a partir do teu disco local ou pen USB.
+# 🇵🇹 Apresentação
 
-**🇬🇧 LOCAlbum** is a lightweight and fully offline app that turns your photo folders into a modern and interactive album — with **year/month navigation**, **automatic slideshow**, and **customizable themes**.  
-It works **completely offline**, directly from your local drive or USB stick.
+**LOCAlbum** é uma aplicação leve e totalmente offline que transforma as tuas pastas de fotos num álbum moderno, rápido e organizado por **anos e meses**, com suporte nativo a **fotos e vídeos**, slideshow, temas e cálculo opcional de idade.
+
+Ideal para pais que querem registar as memórias dos filhos desde o nascimento.
 
 ---
 
-## 💡 Pensado para pais e memórias de infância / Designed for childhood memories
+# 🇬🇧 Overview
 
-> 🇵🇹 **LOCAlbum** foi desenvolvido especialmente para pais que desejam guardar as memórias dos filhos desde o nascimento.  
-> Durante a configuração inicial, podes inserir a **data de nascimento** — o álbum mostrará automaticamente a **idade exata do bebé/criança** à data de cada foto.  
->  
-> (Funcionalidade opcional — se deixares o campo vazio, o álbum funcionará normalmente para qualquer outro tipo de recordação.)
+**LOCAlbum** is a lightweight and completely offline application that converts your photo folders into a modern, fast, and interactive album organized by **year and month**, supporting photos and videos, themes, slideshow, and optional age calculation.
 
-> 🇬🇧 **LOCAlbum** was designed especially for parents who want to preserve their child's memories from birth.  
-> During setup, you can enter the **birthdate** — the album will automatically display the **exact age of the baby/child** at the date of each photo.  
->  
-> (This feature is optional — if you leave it blank, the album works perfectly for any other kind of memories.)
-
+Perfect for parents capturing their children's growth and memories.
 ---
 
 ## ✨ Highlights / Destaques
@@ -40,11 +46,10 @@ It works **completely offline**, directly from your local drive or USB stick.
 |--------------------|-------------------|
 | 🗂️ Automatic organization by **year and month** | 🗂️ Organização automática por **ano e mês** |
 | 🖼️ Support for **photos and videos** | 🖼️ Suporte para **fotos e vídeos** |
-| 🌙 Themes: Dark, Sky and Pink | 🌙 Temas: Escuro, Azul Céu e Rosa |
 | ⏱️ **Automatic slideshow** with adjustable speed | ⏱️ **Slideshow automático** com velocidade ajustável |
 | 👶 Optional **age display** based on birthdate | 👶 Cálculo de idade opcional (a partir da data de nascimento) |
 | 💾 Works **completely offline** — no internet needed | 💾 Funciona **totalmente offline** — nada é enviado para a internet |
-| 🔄 Unified in one tool: **Manager.bat** | 🔄 Tudo num único ficheiro: **Manager.bat** |
+| 🔄 Unified in one tool: **LOCALBUM - Manager.bat** | 🔄 Tudo num único ficheiro: **LOCALBUM - Manager.bat** |
 | 🌍 **Bilingual interface (PT/EN)** | 🌍 Interface **bilingue (PT/EN)** |
 
 ---
@@ -124,8 +129,10 @@ It works **completely offline**, directly from your local drive or USB stick.
 X:
 └── Album
       ├── Fotos
+      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
-      ├── LOCALBUM - Manager.bat ← ficheiro principal / main file
+      ├── localbum-cache.json (oculto / hidden)
+      ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
       ├── favicon.png (oculto / hidden)
       ├── template.html (oculto / hidden)
@@ -149,19 +156,43 @@ leaving only the **`LOCALBUM - Manager.bat`** visible — clean, simple, and rea
 X:
 └── Album
       ├── Fotos
-      ├── LOCALBUM - Manager.bat
-      ├── ajuda_album.png (oculto / hidden)
-      ├── favicon.png (oculto)
-      ├── template.html (oculto)
-      ├── config.ini (oculto)
-      ├── z1.ps1, z3.ps1 (ocultos)
-└── Ver album.html (aparece após a primeira execução)
+      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
+      ├── config (oculto / hidden)
+      ├── localbum-cache.json (oculto / hidden)
+      ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
+      ├── ajuda_album.png (oculto / hidden) 
+      ├── favicon.png (oculto / hidden)
+      ├── template.html (oculto / hidden)
+      ├── z1.ps1, z3.ps1 (ocultos / hidden)
+└── Ver album.html / View album.html
 ```
-- 🚫 **Não alteres nem movas** as seguintes pastas/ficheiros:
-  - `Fotos/`
+## 🇵🇹 Português
+- Não alteres nem renomes:
+  - a pasta `Fotos/`
+  - `template.html`
+  - `config.ini`
+  - `z1.ps1` e `z3.ps1`
+
+- Funciona em:
+  - Windows (total suporte)
+  - macOS / Linux (visualização do HTML)
+  - TVs / Tablets (qualquer navegador)
+
+---
+
+## 🇬🇧 English
+- Do not rename:
+  - the `Fotos/` folder
   - `template.html`
   - `config.ini`
   - `z1.ps1`, `z3.ps1`
+
+- Works on:
+  - Windows (full support)
+  - macOS / Linux (HTML viewing)
+  - Smart TVs and tablets
+
+---
 
 - ⚙️ O ficheiro `config.ini` é criado automaticamente e deve permanecer oculto.  
 - 💾 Podes copiar o projeto completo (pasta `Album`) para uma **pen USB** ou **disco externo** —  
@@ -177,13 +208,15 @@ X:
 X:
 └── Album
       ├── Fotos
-      ├── LOCALBUM - Manager.bat
-      ├── ajuda_album.png (hidden)
-      ├── favicon.png (hidden)
-      ├── template.html (hidden)
-      ├── config.ini (hidden)
-      ├── z1.ps1, z3.ps1 (hidden)
-└── View album.html (appears after first run)
+      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
+      ├── config (oculto / hidden)
+      ├── localbum-cache.json (oculto / hidden)
+      ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
+      ├── ajuda_album.png (oculto / hidden) 
+      ├── favicon.png (oculto / hidden)
+      ├── template.html (oculto / hidden)
+      ├── z1.ps1, z3.ps1 (ocultos / hidden)
+└── Ver album.html / View album.html
 ```
 - 🚫 **Do not rename or move** the following folders/files:
   - `Fotos/`
