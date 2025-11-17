@@ -271,25 +271,61 @@ if "%LANG%"=="pt" (
   echo As tuas fotos em "Album/Fotos" NÃO serão apagadas.
   echo.
   choice /c SN /m "Queres continuar?"
-  if errorlevel 2 (echo Operação cancelada.&timeout /t 2 >nul&goto MENU_PT)
+  if errorlevel 2 (echo Operacao cancelada.&timeout /t 2 >nul&goto MENU_PT)
+
+  :: -- Remover config.ini --
   attrib -h -s "%INI%" >nul 2>&1
   del /f /q "%INI%" >nul 2>&1
+
+  :: -- Remover HTML gerado --
   del /f /q "%ROOT%\..\Ver album.html" >nul 2>&1
   del /f /q "%ROOT%\..\View album.html" >nul 2>&1
-  echo [OK] Reset concluído com sucesso!
+
+  :: -- Remover CACHE --
+  if exist "%ROOT%\localbum-cache.json" (
+      attrib -h -s "%ROOT%\localbum-cache.json" >nul 2>&1
+      del /f /q "%ROOT%\localbum-cache.json" >nul 2>&1
+  )
+
+  :: -- Remover THUMBNAILS --
+  if exist "%ROOT%\Thumbnails\" (
+      attrib -h -s "%ROOT%\Thumbnails" >nul 2>&1
+      rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
+  )
+
+  echo [OK] Reset concluido com sucesso!
   pause
   goto MENU_PT
+
 ) else (
+
   echo [INFO] Resetting LOCALBUM...
   echo This will delete configuration and HTML files.
   echo Your photos in "Album/Fotos" will remain untouched.
   echo.
   choice /c YN /m "Do you want to continue?"
   if errorlevel 2 (echo Operation cancelled.&timeout /t 2 >nul&goto MENU_EN)
+
+  :: -- Remover config.ini --
   attrib -h -s "%INI%" >nul 2>&1
   del /f /q "%INI%" >nul 2>&1
+
+  :: -- Remover HTML --
   del /f /q "%ROOT%\..\Ver album.html" >nul 2>&1
   del /f /q "%ROOT%\..\View album.html" >nul 2>&1
+
+  :: -- Remover CACHE --
+  if exist "%ROOT%\localbum-cache.json" (
+      attrib -h -s "%ROOT%\localbum-cache.json" >nul 2>&1
+      del /f /q "%ROOT%\localbum-cache.json" >nul 2>&1
+  )
+
+  :: -- Remover THUMBNAILS --
+  if exist "%ROOT%\Thumbnails\" (
+      attrib -h -s "%ROOT%\Thumbnails" >nul 2>&1
+      rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
+  )
+
   echo [OK] Reset completed successfully!
   pause
   goto MENU_EN
