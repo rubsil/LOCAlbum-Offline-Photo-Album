@@ -237,6 +237,114 @@ X:
 
 ---
 
+## 📺 Compatibilidade com Smart TVs / Smart TV Compatibility
+
+### 🇵🇹 Português
+
+Atenção: **a maioria das Smart TVs não consegue abrir ficheiros HTML diretamente de uma pen/disco USB**.  
+Isto não é uma limitação do LOCALBUM — é algo comum nas apps de navegador das TVs, que normalmente bloqueiam:
+
+- ficheiros locais (`file://`)
+- JavaScript local
+- acesso a imagens/vídeos via HTML quando está offline
+- caminhos do dispositivo USB dentro do navegador
+
+Por esse motivo, o ficheiro **Ver album.html / View album.html pode não funcionar na TV**.
+
+### ✔️ Mas o álbum continua totalmente utilizável na TV
+
+Mesmo que a versão HTML não abra, **todas as TVs conseguem navegar pelas fotos na pasta organizada pelo LOCALBUM**:
+
+```
+Album
+ └── Fotos
+       ├── 2023
+       │     ├── Janeiro
+       │     ├── Fevereiro
+       │     └── ...
+       ├── 2024
+       │     ├── Março
+       │     ├── Julho
+       │     └── ...
+       └── ...
+```
+
+O LOCALBUM cria automaticamente uma estrutura **Ano → Mês**, compatível com:
+
+- Smart TVs (Samsung, LG, Sony, TCL, Philips…)
+- Android TV / Google TV
+- Fire Stick
+- Boxes Android
+- Consolas
+- Media players USB
+
+### 📌 O que a Smart TV consegue fazer
+
+- Abrir fotos diretamente da pen/disco  
+- Navegar por Ano → Mês → Foto  
+- Criar slideshow nativo da TV  
+- Reproduzir vídeos (MP4/MOV) diretamente das pastas  
+- Funciona 100% offline, sem browser
+
+### 📌 Conclusão
+
+Mesmo que a tua TV não suporte o HTML, **podes sempre usar a pasta `Album/Fotos` como uma versão “TV-ready”**, totalmente compatível com qualquer dispositivo.
+
+---
+
+### 🇬🇧 English
+
+Note: **most Smart TVs cannot open HTML files directly from a USB drive**.  
+This is not a limitation of LOCALBUM but of TV web browsers, which usually block:
+
+- local `file://` access  
+- local JavaScript  
+- loading images/videos from HTML pages offline  
+- USB drive paths inside the browser
+
+As a result, **View album.html / Ver album.html may NOT work on a Smart TV**.
+
+### ✔️ But the album is still fully usable on any Smart TV
+
+Even if the HTML viewer doesn’t work, **all TVs can browse the photo folder structure created by LOCALBUM**:
+
+```
+Album
+ └── Fotos
+       ├── 2023
+       │     ├── January
+       │     ├── February
+       │     └── ...
+       ├── 2024
+       │     ├── March
+       │     ├── July
+       │     └── ...
+       └── ...
+```
+
+LOCALBUM automatically organizes photos/videos into **Year → Month**, which is supported by:
+
+- Smart TVs (Samsung, LG, Sony, TCL, Philips…)  
+- Android TV / Google TV  
+- Fire Stick  
+- Android media boxes  
+- Game consoles  
+- Any USB media player  
+
+### 📌 What the Smart TV CAN do
+
+- Open the USB drive and enter the `Album/Fotos` folder  
+- Browse Year → Month → Photo  
+- Display photos in a slideshow  
+- Play videos (MP4/MOV) natively  
+- No browser or internet required  
+
+### 📌 Summary
+
+Even if your TV cannot open HTML, **LOCALBUM always provides a TV-friendly version** through the `Album/Fotos` folder structure, ensuring full compatibility everywhere.
+
+---
+
 ## 🖼️ Screenshots / Capturas de ecrã
 *(em breve / coming soon)*
 
