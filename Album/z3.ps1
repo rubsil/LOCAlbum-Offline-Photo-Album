@@ -113,6 +113,10 @@ $defaultDest = Join-Path $root "Fotos"
 $dst = Select-FolderDialog $msg_select_dest $defaultDest
 if(-not $dst){ Write-Host $msg_cancel; pause; exit }
 
+
+# ✅ Inicializar Explorer Shell
+$global:ShellApp = New-Object -ComObject Shell.Application
+
 # -------------------------------
 # Função: Obter data inteligente
 # -------------------------------
@@ -153,18 +157,55 @@ function Get-DateSmart($f){
         }
     }
 
-    # 2️⃣ EXIF via exiftool (DateTimeOriginal / CreateDate)
-    $imageExts = @('.jpg','.jpeg','.png','.gif','.webp','.tif','.tiff','.heic','.heif','.bmp','.jfif')
-    if ($imageExts -contains $ext) {
-        try {
-            $exifDate = & exiftool -DateTimeOriginal -CreateDate -s -s -s $f.FullName | Select-Object -First 1
-            if ($exifDate) {
-                return [datetime]::ParseExact($exifDate, "yyyy:MM:dd HH:mm:ss", $null)
-            }
-        } catch {}
-    }
+# 2️⃣ Data via exiftool
+try {
+    $exifDate = & exiftool `
+        -DateTimeOriginal `
+        -CreateDate `
+        -MediaCreateDate `
+        -TrackCreateDate `
+        -FileModifyDate `
+        -s -s -s `
+        -d "%Y-%m-%d %H:%M:%S" `
+        $f.FullName | Select-Object -First 1
 
-    # 3️⃣ Sem data válida
+    if ($exifDate) {
+        Write-Host "[EXIF SMART]" $exifDate
+        return [datetime]::Parse($exifDate)
+    }
+}
+catch {}
+
+# 3️⃣ Windows Date Taken
+try {
+    $folder = $global:ShellApp.Namespace($f.DirectoryName)
+    $item   = $folder.ParseName($f.Name)
+
+    $raw = $folder.GetDetailsOf($item, 12)
+
+    if ($raw) {
+
+        Write-Host "[WINDOWS RAW]" $raw
+
+        # remover caracteres Unicode invisíveis
+        $clean = $raw -replace '[^\d/: ]', ''
+
+        Write-Host "[WINDOWS CLEAN]" $clean
+
+        $culture = [System.Globalization.CultureInfo]::CurrentCulture
+        $dt = [datetime]::Parse($clean, $culture)
+
+        Write-Host "[WINDOWS DATE OK]" $dt
+
+        return $dt
+    }
+}
+catch {
+    Write-Host "[WINDOWS DATE FAIL]"
+}
+
+
+    # 4 Sem data válida
     return $null
 }
 
