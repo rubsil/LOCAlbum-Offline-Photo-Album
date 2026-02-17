@@ -181,28 +181,32 @@ try {
     $folder = $global:ShellApp.Namespace($f.DirectoryName)
     $item   = $folder.ParseName($f.Name)
 
-    $raw = $folder.GetDetailsOf($item, 12)
+    # índices comuns para datas media
+    $indexes = @(12,208,206,204)
 
-    if ($raw) {
+    foreach ($idx in $indexes) {
 
-        Write-Host "[WINDOWS RAW]" $raw
+        $raw = $folder.GetDetailsOf($item, $idx)
 
-        # remover caracteres Unicode invisíveis
-        $clean = $raw -replace '[^\d/: ]', ''
+        if ($raw) {
 
-        Write-Host "[WINDOWS CLEAN]" $clean
+            Write-Host "[WINDOWS RAW idx=$idx]" $raw
 
-        $culture = [System.Globalization.CultureInfo]::CurrentCulture
-        $dt = [datetime]::Parse($clean, $culture)
+            $clean = $raw -replace '[^\d/: ]',''
 
-        Write-Host "[WINDOWS DATE OK]" $dt
+            try {
+                $culture = [System.Globalization.CultureInfo]::CurrentCulture
+                $dt = [datetime]::Parse($clean, $culture)
 
-        return $dt
+                Write-Host "[WINDOWS DATE OK]" $dt
+                return $dt
+            }
+            catch {}
+        }
     }
 }
-catch {
-    Write-Host "[WINDOWS DATE FAIL]"
-}
+catch {}
+
 
 
     # 4 Sem data válida
