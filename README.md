@@ -1,5 +1,5 @@
 # 📸 LOCAlbum – Offline Photo Album  
-### 🚀 v1.3 — Fast & Smooth Edition (Thumbnails + Cache)
+### 🚀 v1.4 — Stability & Compatibility Edition
 
 <p align="center">
   <img src="https://i.imgur.com/2r820LY.png" alt="LOCAlbum Logo" width="200"/>
@@ -7,22 +7,26 @@
 
 ---
 
-## 🆕 Novidades da versão 1.3
-A maior atualização até hoje — o álbum está agora muito mais rápido, suave e eficiente.
+## 🆕 Novidades da versão 1.4 / What's new in v1.4
 
-### 🔥 **Principais novidades**
-- 🖼️ **Thumbnails automáticos ultra-rápidos**  
-  As fotos carregam instantaneamente no álbum, mesmo com milhares de ficheiros.
-  
-- ⚡ **Cache inteligente (incremental)**  
-  O script guarda datas e hashes das fotos/vídeos — só processa novos ficheiros.
-  
-- 📊 **Barra de progresso real**  
-  Mostra o estado exato ao gerar/atualizar o álbum.
-  
-- 📁 **Thumbnails ocultos automaticamente**  
-  A pasta `Album/Thumbnails` fica invisível ao utilizador.
+### 🔧 Melhorias e correções / Improvements and fixes
 
+* 🔍 **Suporte opcional ao ExifTool / Optional ExifTool support**
+  🇵🇹 O organizador de fotos deteta automaticamente o `exiftool.exe` na pasta do projeto — melhora significativamente a leitura de datas em vídeos e formatos menos comuns. Basta colocar o ficheiro na pasta `Album/` (opcional, gratuito em [exiftool.org](https://exiftool.org)).
+  🇬🇧 The photo organizer automatically detects `exiftool.exe` in the project folder — significantly improves date reading for videos and less common formats. Just place the file in the `Album/` folder (optional, free at [exiftool.org](https://exiftool.org)).
+
+* 🔗 **Correção de compatibilidade com nomes de ficheiros especiais / Fix for special character filenames**
+  🇵🇹 Fotos com caracteres especiais no nome (como `#`) carregavam incorretamente — corrigido.
+  🇬🇧 Photos with special characters in their filename (such as `#`) were not loading correctly — fixed.
+
+* ⚡ **Performance melhorada na geração do álbum / Improved album generation performance**
+  🇵🇹 A construção interna do manifest foi otimizada para álbuns com milhares de fotos.
+  🇬🇧 The internal manifest build was optimized for albums with thousands of photos.
+
+* 🛡️ **Injeção de configuração mais robusta / More robust configuration injection**
+  🇵🇹 Corrigido um problema potencial com caracteres especiais no `config.ini` que podia corromper silenciosamente o HTML gerado.
+  🇬🇧 Fixed a potential issue with special characters in `config.ini` that could silently corrupt the generated HTML.
+  
 ---
 
 # 🇵🇹 Apresentação
@@ -349,7 +353,15 @@ Even if your TV cannot open HTML, **LOCALBUM always provides a TV-friendly versi
 ---
 
 ## 🖼️ Screenshots / Capturas de ecrã
-*(em breve / coming soon)*
+
+**Álbum — primeiros dias de vida / Album — first days of life**
+![LOCAlbum screenshot 1](https://i.imgur.com/qOrwXz0.png)
+
+**Álbum — navegação por ano e mês, separadores de dia, contador de idade / Album — year/month navigation, day separators, age counter**
+![LOCAlbum screenshot 2](https://i.imgur.com/EQrIsDG.png)
+
+**Pasta limpa + menu do Manager / Clean folder + Manager menu**
+![LOCAlbum screenshot 3](https://i.imgur.com/KOpFnQl.png)
 
 ---
 
