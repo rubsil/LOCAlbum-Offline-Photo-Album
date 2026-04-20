@@ -45,15 +45,15 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: nowrap;          /* 👈 impede que o título salte de linha */
+  flex-wrap: nowrap;
   gap: 10px;
   margin-top: -28px;
   margin-bottom: -4px;
-  overflow: hidden;           /* 👈 necessário para o ellipsis funcionar */
+  overflow: hidden;
 }
 .controls {
-  flex: 0 0 auto;          /* mantém largura natural, sem encolher */
-  min-width: 320px;        /* 👈 ajusta se quiseres mais ou menos espaço */
+  flex: 0 0 auto;
+  min-width: 320px;
 }
 
 header h1{margin:-28px 0 0 0;font-size:30px;letter-spacing:0.4px}
@@ -62,7 +62,7 @@ header h1{margin:-28px 0 0 0;font-size:30px;letter-spacing:0.4px}
   font-size: 42px;
   letter-spacing: 0.4px;
   line-height: 1.1;
-  display: block;               /* 👈 de inline-block → block, permite truncar */
+  display: block;
   padding-bottom: 2px;
   background: linear-gradient(90deg, #fff, #ffd6e8, #fff);
   -webkit-background-clip: text;
@@ -70,10 +70,10 @@ header h1{margin:-28px 0 0 0;font-size:30px;letter-spacing:0.4px}
   background-size: 200% auto;
   animation: brilhoSuave 6s linear infinite;
   text-shadow: 0 0 8px rgba(255,182,217,.15);
-  overflow: hidden;             /* 👈 ajuda o ellipsis */
-  text-overflow: ellipsis;      /* 👈 ativa o corte */
-  white-space: nowrap;          /* 👈 mantém tudo numa linha */
-  max-width: 100%;              /* 👈 respeita o espaço disponível */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 
@@ -90,8 +90,8 @@ header h1#headline {
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: help;
-  display: block;           /* 👈 Força comportamento de bloco dentro do flex */
-  max-width: 100%;          /* garante que respeita a caixa flex */
+  display: block;
+  max-width: 100%;
 }
 
 
@@ -122,11 +122,11 @@ button.active{background:var(--accent); color:#071018; font-weight:700}
 #filterBar{
   display:flex;
   gap:8px;
-  margin:-26px 0 4px 0; /* como pediste */
+  margin:-26px 0 4px 0;
   align-items:center;
 }
 #filterBar button{
-  display:inline-flex; align-items:center; gap:6px; color:#fff;  /* texto sempre branco */
+  display:inline-flex; align-items:center; gap:6px; color:#fff;
 }
 #filterBar button.active{ background:rgba(255,255,255,.18) }
 #filterBar button:hover{  background:rgba(255,255,255,.10) }
@@ -134,11 +134,11 @@ button.active{background:var(--accent); color:#071018; font-weight:700}
 /* ---------- Navegação por ano/mês ---------- */
 nav#years{
   display:flex;
-  flex-wrap:nowrap;      /* impede saltar linha */
-  overflow-x:auto;       /* permite scroll horizontal */
+  flex-wrap:nowrap;
+  overflow-x:auto;
   gap:8px;
   padding-bottom:6px;
-  scrollbar-width: thin; /* Firefox */
+  scrollbar-width: thin;
 }
 nav#years::-webkit-scrollbar{
   height:6px;
@@ -148,14 +148,14 @@ nav#years::-webkit-scrollbar-thumb{
   border-radius:4px;
 }
 nav#years{
-  margin-top:0px;       /* como pediste */
+  margin-top:0px;
   margin-bottom:4px;
 }
 nav#months {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
-  gap: 8px;              /* 👈 espaçamento idêntico aos ANOS */
+  gap: 8px;
   margin-top: 0px;
   margin-bottom: 4px;
   scrollbar-width: thin;
@@ -172,7 +172,6 @@ main.viewer{
   width:100%; height:100%; border-radius:8px; display:flex; align-items:center; justify-content:center;
   position:relative; overflow:hidden; background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.02))
 }
-/* ✅ Sem corte: usa auto + máximos */
 .stage img,.stage video{
   max-width:100%; max-height:100%; width:auto; height:auto;
   object-fit:contain; display:block; border-radius:6px; opacity:0; transition:opacity .6s ease
@@ -188,8 +187,8 @@ main.viewer{
 .thumbs {
   position: relative;
   height: 100%;
-  overflow-y: auto;              /* 👈 apenas scroll vertical */
-  overflow-x: hidden;            /* 👈 impede scroll lateral */
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 6px;
   border-left: 1px solid rgba(255,255,255,.06);
   display: flex;
@@ -540,10 +539,10 @@ function monthOrder(a, b) {
         const norm = normalize(name);
         for (let i = 0; i < monthNames.length; i++) {
             if (norm.includes(monthNames[i])) {
-                return i % 12; // devolve 0–11
+                return i % 12;
             }
         }
-        return -1; // não tem mês no nome
+        return -1;
     };
 
     // Ecografias sempre primeiro
@@ -678,8 +677,8 @@ function buildFlat() {
  		month: m,
   		name: it.name,
   		date: it.date,
-  		src: it.path,                 // original grande
-  		thumb: it.thumb || it.path    // thumbnail (ou original, se faltar)
+  		src: it.path,
+  		thumb: it.thumb || it.path
 		});
 
             });
@@ -704,7 +703,7 @@ function getFilteredYears(){
 /* Render anos */
 function renderYears(){
   yearsEl.innerHTML='';
-  const validYears = getFilteredYears();  // anos com conteúdo no filtro atual
+  const validYears = getFilteredYears();
   const allYears   = Object.keys(manifest).sort((a,b)=>a-b);
 
   allYears.forEach(y=>{
@@ -875,7 +874,7 @@ function addThumbCard(y, m, it) {
         ? document.createElement('video')
         : document.createElement('img');
 
-    el.src = encodeURI(it.thumb || it.path);
+    el.src = (it.thumb || it.path).split('/').map(encodeURIComponent).join('/');
 
     if (el.tagName === 'IMG') {
         el.loading = 'lazy';
@@ -934,7 +933,7 @@ function show(i){
       const idx = flatList.findIndex(x=>x.year===ml[0].year && x.month===ml[0].month && x.name===ml[0].name);
       if(idx>-1){ curIdx=idx; return show(idx); }
     }
-    return; // nada para mostrar
+    return;
   }
 
   // Ajusta ano/mês selecionados na UI (se vier de "restauro")
@@ -950,7 +949,7 @@ function show(i){
   const ext=it.name.split('.').pop().toLowerCase();
   const isVideo = VIDEO_EXTS.includes(ext);
   const el = isVideo ? document.createElement('video') : document.createElement('img');
-  el.src = encodeURI(it.src);
+  el.src = it.src.split('/').map(encodeURIComponent).join('/');
   if(el.tagName==='VIDEO'){
     const wasRunning=!!timer; if(wasRunning) stopSS();
     el.controls=true; el.playsInline=true; el.preload="metadata"; el.muted=false; el.autoplay=true;
@@ -1128,7 +1127,7 @@ document.getElementById('headline').title = name;
   const ln=localStorage.getItem('album_last_name');
   if(ly && lm && manifest[ly] && manifest[ly][lm]){
     // garantir que ano/mês existem com filtro ATUAL
-    currentFilter="all"; // no restauro inicial, mostrar tudo para garantir visibilidade
+    currentFilter="all";
     [fltAll,fltPhotos,fltVideos].forEach(b=>b.classList.remove('active')); fltAll.classList.add('active');
     renderYears();
     [...yearsEl.querySelectorAll("button")].find(b=>b.textContent==ly)?.click();
