@@ -137,6 +137,7 @@ X:
       ├── Fotos
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
+      ├── exiftool.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -164,6 +165,7 @@ X:
       ├── Fotos
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
+      ├── exiftool.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -216,6 +218,7 @@ X:
       ├── Fotos
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
+      ├── exiftool.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -400,3 +403,6 @@ If this project was useful to you, consider supporting its development.
 
 Distribuído sob a **licença MIT** — uso livre, com crédito ao autor.  
 Distributed under the **MIT License** — free to use, with author attribution.
+
+This project optionally uses ExifTool by Phil Harvey (https://exiftool.org)
+for reading media metadata. ExifTool is free software — see exiftool.org for license details.
