@@ -500,7 +500,7 @@ Get-ChildItem -Path $base -Directory |
     Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
 
         $monthFolder = $_.Name
-        $manifest[$yearFolder][$monthFolder] = @()
+        $manifest[$yearFolder][$monthFolder] = [System.Collections.Generic.List[object]]::new()
 
         $normMonth = Normalize-Name $monthFolder
 
@@ -608,12 +608,12 @@ Get-ChildItem -Path $base -Directory |
             # ------------------------------
             # Entrada no MANIFEST
             # ------------------------------
-            $manifest[$yearFolder][$monthFolder] += [pscustomobject]@{
-                name  = $name
-                path  = "Album/Fotos/$yearFolder/$monthFolder/$name"
-                thumb = $thumbRel
-                date  = $photoDate
-            }
+$manifest[$yearFolder][$monthFolder].Add([pscustomobject]@{
+    name  = $name
+    path  = "Album/Fotos/$yearFolder/$monthFolder/$name"
+    thumb = $thumbRel
+    date  = $photoDate
+})
         }
     }
 }
@@ -676,8 +676,7 @@ $MANIFEST = "const manifest = " + (ConvertTo-Json $manifest -Depth 6 -Compress) 
 $template  = Get-Content -Raw $templatePath -Encoding UTF8
 
 # Inject
-$htmlFinal = $template -replace '<!--CONFIG-->',   $CONFIG `
-                       -replace '<!--MANIFEST-->', $MANIFEST
+$htmlFinal = $template.Replace('<!--CONFIG-->', $CONFIG).Replace('<!--MANIFEST-->', $MANIFEST)
 
 # Favicon com TAG de versão (força refresh no navegador)
 $versionTag = (Get-Date).ToString("yyyyMMddHHmmss")
