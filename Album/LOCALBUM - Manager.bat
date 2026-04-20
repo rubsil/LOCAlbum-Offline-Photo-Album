@@ -26,7 +26,7 @@ if not exist "%PWSH%" set "PWSH=powershell.exe"
 :: =====================================================
 ::  OCULTAR ficheiros técnicos logo ao arrancar
 :: =====================================================
-for %%A in (z1.ps1 z3.ps1 template.html favicon.png ajuda_album.png) do (
+for %%A in (z1.ps1 z3.ps1 template.html favicon.png ajuda_album.png exiftool.exe) do (
   if exist "%ROOT%\%%A" (
     attrib +h +s "%ROOT%\%%A" >nul 2>&1
   )
