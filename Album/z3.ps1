@@ -77,6 +77,24 @@ Write-Host ""
 Write-Host $msg_start
 Write-Host "-------------------------------------------"
 
+# Verificar exiftool — primeiro na pasta local, depois no PATH
+$exiftoolLocal = Join-Path $root "exiftool.exe"
+if (Test-Path $exiftoolLocal) {
+    $env:PATH = "$root;$env:PATH"  # garante que o script o encontra
+} elseif (-not (Get-Command exiftool -ErrorAction SilentlyContinue)) {
+    if ($lang -eq "en") {
+        Write-Host "[WARNING] exiftool not found - dates for some videos may be inaccurate"
+        Write-Host "          Download from https://exiftool.org and place exiftool.exe in the Album folder"
+        $open = Read-Host "Open download page now? (Y/N)"
+        if ($open -eq "Y") { Start-Process "https://exiftool.org" }
+    } else {
+        Write-Host "[AVISO] exiftool nao encontrado - datas de alguns videos podem ser imprecisas"
+        Write-Host "        Descarrega em https://exiftool.org e coloca o exiftool.exe na pasta Album"
+        $open = Read-Host "Abrir pagina de download agora? (S/N)"
+        if ($open -eq "S") { Start-Process "https://exiftool.org" }
+    }
+}
+
 # -------------------------------
 # Função: Escolher pasta (sempre no topo)
 # -------------------------------
