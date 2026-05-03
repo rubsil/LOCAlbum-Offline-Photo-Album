@@ -244,19 +244,49 @@ if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 :: =====================================================
 ::  GENERATE / UPDATE ALBUM
 :: =====================================================
+:: =====================================================
+::  GENERATE / UPDATE ALBUM
+:: =====================================================
 :GENERATE
 cls
-if "%LANG%"=="pt" (
-  echo [INFO] A gerar / atualizar o álbum...
-) else (
-  echo [INFO] Generating / updating album...
-)
+echo [INFO] A gerar / atualizar o album...
 echo.
 if not exist "%ROOT%\z1.ps1" (
   echo [ERRO] Ficheiro z1.ps1 nao encontrado!
   pause
   if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
+
+if "%LANG%"=="pt" (
+  echo Como queres atualizar o album?
+  echo.
+  echo [A] Atualizacao rapida   - usa o cache de pastas ^(recomendado se usaste sempre a opcao [1] para adicionar fotos^)
+  echo [B] Atualizacao completa - volta a fazer scan a tudo ^(usa se adicionaste ou alteraste fotos manualmente nas pastas^)
+  echo.
+) else (
+  echo How do you want to update the album?
+  echo.
+  echo [A] Quick update - uses folder cache ^(recommended if you always used option [1] to add photos^)
+  echo [B] Full update  - rescans everything ^(use if you added photos manually in Explorer^)
+  echo.
+)
+
+set /p UPDATE_MODE="[A/B]: "
+
+if /i "!UPDATE_MODE!"=="B" (
+  for /r "%ROOT%\Fotos" %%F in (_frozen.flag) do (
+    if exist "%%F" (
+      attrib -h -s "%%F" >nul 2>&1
+      del /f /q "%%F" >nul 2>&1
+    )
+  )
+  if "!LANG!"=="pt" (
+    echo [INFO] Cache de pastas limpo. A fazer scan completo...
+  ) else (
+    echo [INFO] Folder cache cleared. Running full scan...
+  )
+)
+
 "%PWSH%" -ExecutionPolicy Bypass -File "%ROOT%\z1.ps1"
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 
@@ -293,6 +323,11 @@ if "%LANG%"=="pt" (
       rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
   )
 
+:: -- Remover FROZEN FLAGS e CACHE DE MÊS --
+  for /r "%ROOT%\Fotos" %%F in (_frozen.flag _cache_mes.json) do (
+      if exist "%%F" del /f /q "%%F" >nul 2>&1
+  )
+
   echo [OK] Reset concluido com sucesso!
   pause
   goto MENU_PT
@@ -324,6 +359,11 @@ if "%LANG%"=="pt" (
   if exist "%ROOT%\Thumbnails\" (
       attrib -h -s "%ROOT%\Thumbnails" >nul 2>&1
       rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
+  )
+
+:: -- Remover FROZEN FLAGS e CACHE DE MÊS --
+  for /r "%ROOT%\Fotos" %%F in (_frozen.flag _cache_mes.json) do (
+      if exist "%%F" del /f /q "%%F" >nul 2>&1
   )
 
   echo [OK] Reset completed successfully!
