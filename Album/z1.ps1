@@ -486,6 +486,7 @@ $totalFiles = $allFiles.Count
 $processed  = 0
 $fromCache  = 0
 $recomputed = 0
+$fromFrozen = 0
 
 # Loop: ano → mês → ficheiros
 Get-ChildItem -Path $base -Directory |
@@ -497,19 +498,38 @@ Get-ChildItem -Path $base -Directory |
         $manifest[$yearFolder] = @{}
     }
 
-    Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
+Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
 
         $monthFolder = $_.Name
         $manifest[$yearFolder][$monthFolder] = [System.Collections.Generic.List[object]]::new()
-
         $normMonth = Normalize-Name $monthFolder
 
+        $frozenFlag = Join-Path $_.FullName "_frozen.flag"
+        $cacheMonth = Join-Path $_.FullName "_cache_mes.json"
+
+        # ── PASTA CONGELADA → carregar cache e saltar scan ──
+        if (Test-Path $frozenFlag) {
+            try {
+                $cached = Get-Content $cacheMonth -Raw -Encoding UTF8 | ConvertFrom-Json
+                foreach ($entry in $cached) {
+                    $manifest[$yearFolder][$monthFolder].Add([pscustomobject]$entry)
+                }
+                $fromFrozen++
+                Write-Host "  [FROZEN] $yearFolder\$monthFolder"
+                return  # continua para o próximo mês
+            }
+            catch {
+                Write-Host "  [AVISO] Cache corrompida, re-escanear: $monthFolder"
+                # falha → cai no scan normal
+            }
+        }
+
+        # ── SCAN NORMAL ──────────────────────────────────────
         Get-ChildItem -Path $_.FullName -File | Sort-Object Name | ForEach-Object {
 
             $file = $_
             $processed++
 
-            # Barra de progresso
             if ($totalFiles -gt 0) {
                 Write-Progress -Activity $msg_processing `
                                 -Status "$processed / $totalFiles" `
@@ -520,18 +540,12 @@ Get-ChildItem -Path $base -Directory |
             $fileKey   = "$yearFolder/$monthFolder/$name"
             $lastWrite = $file.LastWriteTimeUtc.Ticks
 
-            # ------------------------------
-            # Tentar usar cache
-            # ------------------------------
             $photoDate = $null
             if ($cache.ContainsKey($fileKey) -and $cache[$fileKey].lastWrite -eq $lastWrite) {
                 $photoDate = $cache[$fileKey].date
                 $fromCache++
             }
             else {
-                # ------------------------------
-                # Tentar extrair data do nome
-                # ------------------------------
                 $patterns = @(
                     '(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})',
                     '(\d{4})(\d{2})(\d{2})[_-]',
@@ -553,9 +567,6 @@ Get-ChildItem -Path $base -Directory |
                     }
                 }
 
-                # ------------------------------
-                # Se falhou → tentar EXIF
-                # ------------------------------
                 if (-not $photoDate) {
                     try {
                         $img = [System.Drawing.Image]::FromFile($file.FullName)
@@ -567,54 +578,47 @@ Get-ChildItem -Path $base -Directory |
                     } catch {}
                 }
 
-                # ------------------------------
-                # Último recurso → lastwrite
-                # ------------------------------
                 if (-not $photoDate) {
                     $photoDate = $file.LastWriteTime.ToString("yyyy-MM-dd")
                 }
 
-                # Guardar no cache
                 $cache[$fileKey] = [pscustomobject]@{
                     key       = $fileKey
                     lastWrite = $lastWrite
                     date      = $photoDate
                 }
-
                 $recomputed++
             }
 
-            # ------------------------------
-            # THUMBNAIL (somente fotos)
-            # ------------------------------
             $ext = $file.Extension.ToLower()
 
             if ($ext -in ".mp4", ".mov", ".avi", ".mkv", ".wmv") {
-
-                # VÍDEO → NÃO cria thumbnail, usa ícone no HTML
                 $thumbRel = $null
-
             }
             else {
-                # FOTO → criar thumbnail normalmente
-                $thumbDir   = Join-Path $thumbRoot "$yearFolder\$normMonth"
-                $thumbName  = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
-                $thumbFull  = Join-Path $thumbDir $thumbName
-                $thumbRel   = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
-
+                $thumbDir  = Join-Path $thumbRoot "$yearFolder\$normMonth"
+                $thumbName = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
+                $thumbFull = Join-Path $thumbDir $thumbName
+                $thumbRel  = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
                 New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
             }
 
-            # ------------------------------
-            # Entrada no MANIFEST
-            # ------------------------------
-$manifest[$yearFolder][$monthFolder].Add([pscustomobject]@{
-    name  = $name
-    path  = "Album/Fotos/$yearFolder/$monthFolder/$name"
-    thumb = $thumbRel
-    date  = $photoDate
-})
+            $manifest[$yearFolder][$monthFolder].Add([pscustomobject]@{
+                name  = $name
+                path  = "Album/Fotos/$yearFolder/$monthFolder/$name"
+                thumb = $thumbRel
+                date  = $photoDate
+            })
         }
+
+        # ── GUARDAR CACHE DO MÊS E CONGELAR ─────────────────
+        $manifest[$yearFolder][$monthFolder] |
+            ConvertTo-Json -Depth 5 |
+            Set-Content -Path $cacheMonth -Encoding UTF8
+
+        [System.IO.File]::WriteAllText($frozenFlag, "")
+        attrib +h +s "$frozenFlag" > $null 2>&1
+        attrib +h +s "$cacheMonth" > $null 2>&1
     }
 }
 
@@ -642,6 +646,7 @@ if (Test-Path $thumbRoot) {
 Write-Host ""
 Write-Host "Resumo processamento:"
 Write-Host "  Total de ficheiros:           $totalFiles"
+Write-Host "  Pastas congeladas (skip):     $fromFrozen"
 Write-Host "  Reutilizados do cache:        $fromCache"
 Write-Host "  Novos/alterados (scan EXIF):  $recomputed"
 Write-Host ""
