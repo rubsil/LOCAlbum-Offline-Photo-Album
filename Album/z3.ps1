@@ -271,8 +271,11 @@ foreach($f in $files){
     $target = Join-Path $tgt $f.Name
 
     if (-not (Test-Path $target)) {
-        Copy-Item $f.FullName -Destination $target
+Copy-Item $f.FullName -Destination $target
         Write-Host "[OK] $($f.Name) -> $year\$month"
+        # Descongelar pasta de destino
+        $frozenFlag = Join-Path $tgt "_frozen.flag"
+        if (Test-Path $frozenFlag) { Remove-Item $frozenFlag -Force }
     }
 else {
     try {
@@ -294,8 +297,11 @@ else {
                 continue
             }
 
-            Copy-Item $f.FullName -Destination $newTarget
+Copy-Item $f.FullName -Destination $newTarget
             Write-Host "[COPIADO] $($f.Name) (conteudo diferente, guardado como $newName)"
+            # Descongelar pasta de destino
+            $frozenFlag = Join-Path $tgt "_frozen.flag"
+            if (Test-Path $frozenFlag) { Remove-Item $frozenFlag -Force }
         }
     }
     catch {
