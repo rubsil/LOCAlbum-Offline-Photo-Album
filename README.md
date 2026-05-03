@@ -1,31 +1,25 @@
 # 📸 LOCAlbum – Offline Photo Album  
-### 🚀 v1.4 — Stability & Compatibility Edition
+### 🚀 v1.5 — Smart Update Edition (Frozen Folders)
 
-<p align="center">
-  <img src="https://i.imgur.com/2r820LY.png" alt="LOCAlbum Logo" width="200"/>
-</p>
+[![LOCAlbum Logo](https://i.imgur.com/2r820LY.png)](https://i.imgur.com/2r820LY.png)
 
 ---
 
-## 🆕 Novidades da versão 1.4 / What's new in v1.4
+## 🆕 Novidades da versão 1.5 / What's new in v1.5
 
-### 🔧 Melhorias e correções / Improvements and fixes
+### ⚡ Frozen Folders — Atualização instantânea / Instant updates
 
-* 🔍 **Suporte opcional ao ExifTool / Optional ExifTool support**
-  🇵🇹 O organizador de fotos deteta automaticamente o `exiftool.exe` na pasta do projeto — melhora significativamente a leitura de datas em vídeos e formatos menos comuns. Basta colocar o ficheiro na pasta `Album/` (opcional, gratuito em [exiftool.org](https://exiftool.org)).
-  🇬🇧 The photo organizer automatically detects `exiftool.exe` in the project folder — significantly improves date reading for videos and less common formats. Just place the file in the `Album/` folder (optional, free at [exiftool.org](https://exiftool.org)).
+🇵🇹 O sistema de atualização do álbum (opção 2) foi completamente optimizado. Cada pasta de mês fica agora "congelada" após ser processada. Nas execuções seguintes, pastas sem alterações são ignoradas — apenas as pastas com fotos novas são intervencionadas.
 
-* 🔗 **Correção de compatibilidade com nomes de ficheiros especiais / Fix for special character filenames**
-  🇵🇹 Fotos com caracteres especiais no nome (como `#`) carregavam incorretamente — corrigido.
-  🇬🇧 Photos with special characters in their filename (such as `#`) were not loading correctly — fixed.
+Ao escolher a opção 2, o utilizador pode agora escolher entre:
+- **[A] Atualização rápida** — usa o cache de pastas (recomendado se usaste sempre a opção [1] para adicionar fotos/vídeos)
+- **[B] Atualização completa** — volta a fazer scan a tudo (recomendado se adicionaste ou alteraste fotos/vídeos manualmente nas pastas diretamente no Explorer)
 
-* ⚡ **Performance melhorada na geração do álbum / Improved album generation performance**
-  🇵🇹 A construção interna do manifest foi otimizada para álbuns com milhares de fotos.
-  🇬🇧 The internal manifest build was optimized for albums with thousands of photos.
+🇬🇧 The album update system (option 2) has been completely optimized. Each month folder is now "frozen" after being processed. On subsequent runs, unchanged folders are skipped — only folders with new photos are rescanned.
 
-* 🛡️ **Injeção de configuração mais robusta / More robust configuration injection**
-  🇵🇹 Corrigido um problema potencial com caracteres especiais no `config.ini` que podia corromper silenciosamente o HTML gerado.
-  🇬🇧 Fixed a potential issue with special characters in `config.ini` that could silently corrupt the generated HTML.
+When choosing option 2, the user can now select:
+- **[A] Quick update** — uses folder cache (recommended if you always used option [1] to add photos)
+- **[B] Full update** — rescans everything (recommended if you added photos/videos manually in Explorer)
   
 ---
 
@@ -84,7 +78,7 @@ Perfect for parents capturing their children's growth and memories.
 - **[1]** organiza automaticamente milhares de fotos por pastas **Ano/Mês** (sem duplicados).  
 - **[2]** cria ou atualiza o álbum HTML (`Ver album.html` / `View album.html`).  
   > 🔍 *Nota:* Se existirem muitas fotos, este processo pode demorar um pouco na primeira execução devido à criação das thumbnails.  
-  > ⚡ *Nas próximas vezes será muito mais rápido*, graças ao sistema de **cache**, que evita reprocessar ficheiros já lidos — só gera thumbnails para novas fotos.  
+  > ⚡ A partir da segunda execução será quase instantâneo graças ao sistema de **pastas congeladas** — só processa pastas com fotos novas.
 - **[3]** repõe o projeto ao estado original, **sem apagar as tuas fotos**.  
 - **[i]** mostra ajuda e instruções.
 
@@ -121,7 +115,7 @@ Perfect for parents capturing their children's growth and memories.
 - **[1]** automatically sorts thousands of photos into **Year/Month** folders (no duplicates).  
 - **[2]** creates or updates the HTML album (`View album.html` / `Ver album.html`).  
   > 🔍 *Note:* If you have many photos, the first run may take a while because thumbnails must be created.  
-  > ⚡ *Future updates will be much faster*, thanks to the **cache system**, which skips already-processed files — thumbnails are only generated for new photos.  
+  > ⚡ From the second run onwards, updates are nearly instant thanks to the **frozen folders** system — only folders with new photos are rescanned. 
 - **[3]** resets the project to its original state, **without deleting your photos**.  
 - **[i]** displays help and instructions.
 
@@ -139,6 +133,10 @@ Perfect for parents capturing their children's growth and memories.
 X:
 └── Album
       ├── Fotos
+            ├── 2023
+            ├── Janeiro
+                   ├── _frozen.flag    (oculto / hidden — criado automaticamente)
+                   └── _cache_mes.json (oculto / hidden — criado automaticamente)
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
@@ -158,6 +156,30 @@ leaving only the **`LOCALBUM - Manager.bat`** visible — clean, simple, and rea
 
 ---
 
+## 🔍 ExifTool (opcional / optional)
+
+🇵🇹
+O LOCAlbum suporta o **ExifTool** de Phil Harvey para melhorar a leitura de datas em vídeos e formatos menos comuns.
+
+* Descarrega o executável Windows 64-bit em **[exiftool.org](https://exiftool.org)**
+* Renomeia o ficheiro para `exiftool.exe`
+* Coloca-o na pasta `Album/` — será detetado e ocultado automaticamente
+
+> ℹ️ Sem o ExifTool, o LOCAlbum continua a funcionar normalmente — usa o nome do ficheiro e os metadados do Windows para determinar as datas.
+
+🇬🇧
+LOCAlbum supports **ExifTool** by Phil Harvey for improved date reading on videos and less common formats.
+
+* Download the Windows 64-bit executable from **[exiftool.org](https://exiftool.org)**
+* Rename it to `exiftool.exe`
+* Place it in the `Album/` folder — it will be detected and hidden automatically
+
+> ℹ️ Without ExifTool, LOCAlbum works normally — it uses filenames and Windows metadata to determine dates.
+
+*ExifTool is free software by Phil Harvey — [exiftool.org](https://exiftool.org)*
+
+---
+
 ## 🧠 Dicas e Cuidados / Tips & Notes
 
 ### 🇵🇹 **Português**
@@ -167,6 +189,10 @@ leaving only the **`LOCALBUM - Manager.bat`** visible — clean, simple, and rea
 X:
 └── Album
       ├── Fotos
+            ├── 2023
+            ├── Janeiro
+                   ├── _frozen.flag    (oculto / hidden — criado automaticamente)
+                   └── _cache_mes.json (oculto / hidden — criado automaticamente)
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
@@ -220,6 +246,10 @@ X:
 X:
 └── Album
       ├── Fotos
+            ├── 2023
+            ├── Janeiro
+                   ├── _frozen.flag    (oculto / hidden — criado automaticamente)
+                   └── _cache_mes.json (oculto / hidden — criado automaticamente)
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
