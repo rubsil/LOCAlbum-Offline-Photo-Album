@@ -182,7 +182,6 @@ try {
         -CreateDate `
         -MediaCreateDate `
         -TrackCreateDate `
-        -FileModifyDate `
         -s -s -s `
         -d "%Y-%m-%d %H:%M:%S" `
         $f.FullName | Select-Object -First 1
