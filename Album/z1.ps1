@@ -546,40 +546,81 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
                 $fromCache++
             }
             else {
+$nameNoExt = [IO.Path]::GetFileNameWithoutExtension($name)
+
                 $patterns = @(
+                    'PXL_(\d{4})(\d{2})(\d{2})_',
+                    'MVIMG_(\d{4})(\d{2})(\d{2})',
+                    'PANO_(\d{4})(\d{2})(\d{2})',
+                    'Screenshot_(\d{4})(\d{2})(\d{2})',
+                    'IMG_(\d{4})(\d{2})(\d{2})',
+                    'IMG-(\d{4})(\d{2})(\d{2})-WA',
+                    'IMG-(\d{4})(\d{2})(\d{2})',
+                    'VID_(\d{4})(\d{2})(\d{2})',
+                    'VID-(\d{4})(\d{2})(\d{2})-WA',
+                    'VID-(\d{4})(\d{2})(\d{2})',
+                    'PTT-(\d{4})(\d{2})(\d{2})-WA',
+                    'GOPR(\d{4})(\d{2})(\d{2})',
+                    'GH(\d{4})(\d{2})(\d{2})',
+                    'DSC_(\d{4})(\d{2})(\d{2})',
+                    'DSC\d+_(\d{4})(\d{2})(\d{2})',
+                    'photo_(\d{4})-(\d{2})-(\d{2})',
+                    'video_(\d{4})-(\d{2})-(\d{2})',
+                    'signal-(\d{4})-(\d{2})-(\d{2})',
                     '(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})',
                     '(\d{4})(\d{2})(\d{2})[_-]',
-                    '(\d{8})[_-]',
                     '(\d{4})[-_](\d{2})[-_](\d{2})',
-                    'PXL_(\d{4})(\d{2})(\d{2})_',
-                    'IMG_(\d{4})(\d{2})(\d{2})',
-                    'VID_(\d{4})(\d{2})(\d{2})',
-                    'PHOTO_(\d{4})(\d{2})(\d{2})'
+                    '(\d{4})(\d{2})(\d{2})'
                 )
 
                 foreach ($pat in $patterns) {
-                    if ($name -match $pat) {
+                    if ($nameNoExt -match $pat) {
                         try {
                             $y=[int]$matches[1]; $m=[int]$matches[2]; $d=[int]$matches[3]
-                            $photoDate = (Get-Date -Year $y -Month $m -Day $d).ToString("yyyy-MM-dd")
-                            break
+                            if ($y -ge 1970 -and $y -le 2100 -and $m -ge 1 -and $m -le 12 -and $d -ge 1 -and $d -le 31) {
+                                $photoDate = (Get-Date -Year $y -Month $m -Day $d).ToString("yyyy-MM-dd")
+                                break
+                            }
                         } catch {}
                     }
                 }
 
                 if (-not $photoDate) {
+                    foreach ($propId in @(36867, 36868, 306)) {
+                        try {
+                            $img = [System.Drawing.Image]::FromFile($file.FullName)
+                            $prop = $img.GetPropertyItem($propId)
+                            $dateTaken = [System.Text.Encoding]::ASCII.GetString($prop.Value).Trim([char]0)
+                            $img.Dispose()
+                            $dt = [datetime]::ParseExact($dateTaken, "yyyy:MM:dd HH:mm:ss", $null)
+                            $photoDate = $dt.ToString("yyyy-MM-dd")
+                            break
+                        } catch {}
+                    }
+                }
+
+                if (-not $photoDate -and (Get-Command exiftool -ErrorAction SilentlyContinue)) {
                     try {
-                        $img = [System.Drawing.Image]::FromFile($file.FullName)
-                        $prop = $img.GetPropertyItem(36867)
-                        $dateTaken = [System.Text.Encoding]::ASCII.GetString($prop.Value).Trim([char]0)
-                        $img.Dispose()
-                        $dt = [datetime]::ParseExact($dateTaken, "yyyy:MM:dd HH:mm:ss", $null)
-                        $photoDate = $dt.ToString("yyyy-MM-dd")
+                        $exifDate = & exiftool -DateTimeOriginal -CreateDate -s -s -s `
+                                    -d "%Y-%m-%d" $file.FullName |
+                                    Where-Object { $_ -match '^\d{4}-\d{2}-\d{2}$' } |
+                                    Select-Object -First 1
+                        if ($exifDate) { $photoDate = $exifDate.Trim() }
                     } catch {}
                 }
 
                 if (-not $photoDate) {
-                    $photoDate = $file.LastWriteTime.ToString("yyyy-MM-dd")
+                    $monthMap = @{
+    "janeiro"="01"; "fevereiro"="02"; "marco"="03"; "abril"="04"
+    "maio"="05"; "junho"="06"; "julho"="07"; "agosto"="08"
+    "setembro"="09"; "outubro"="10"; "novembro"="11"; "dezembro"="12"
+    "january"="01"; "february"="02"; "march"="03"; "april"="04"
+    "may"="05"; "june"="06"; "july"="07"; "august"="08"
+    "september"="09"; "october"="10"; "november"="11"; "december"="12"
+}
+$normM = $monthFolder.ToLower().Normalize("FormD") -replace '[\p{Mn}]',''
+$monthNum = if ($monthMap[$normM]) { $monthMap[$normM] } else { "01" }
+$photoDate = "$yearFolder-$monthNum-01"
                 }
 
                 $cache[$fileKey] = [pscustomobject]@{
