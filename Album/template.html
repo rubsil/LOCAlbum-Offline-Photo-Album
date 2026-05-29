@@ -331,7 +331,6 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
       <!-- linha 3 -->
       <div class="controls-row">
         <div id="langToggle" style="cursor:pointer;font-size:20px;line-height:1.2">🇵🇹 / 🇬🇧</div>
-        <button id="saveTheme" title="Guardar todas as preferências">💾</button>
       </div>
     </div>
   </header>
@@ -999,6 +998,17 @@ if(tsel) {
 }
 
 /* next/prev respeitam filtro E mês atual */
+
+function nextGlobal(){
+  const filtered = flatList.filter(x => matchFilterByName(x.name, currentFilter));
+  if(!filtered.length) return;
+  const cur = flatList[curIdx];
+  const pos = filtered.findIndex(x => x.name===cur?.name && x.year===cur?.year && x.month===cur?.month);
+  const nxt = filtered[(pos+1) % filtered.length];
+  const idx = flatList.findIndex(x=>x.year===nxt.year&&x.month===nxt.month&&x.name===nxt.name);
+  if(idx>-1) show(idx);
+}
+
 function next(){
   const it = flatList[curIdx]; if(!it) return;
   const list = monthListFiltered(it.year,it.month);
@@ -1022,7 +1032,7 @@ function resetBar(){ bar.style.transition='none'; bar.style.width='0%'; void bar
 function startSS(){
   if(timer) return;
   slideMs = document.fullscreenElement ? (+fsSpeed.value||4000) : (+speedSel.value||4000);
-  timer=setInterval(()=>{ next(); resetBar(); }, slideMs);
+  timer=setInterval(()=>{ nextGlobal(); resetBar(); }, slideMs);
   const T=STR[Lang]||STR.pt;
   document.getElementById('slideshow').classList.add('active');
   document.getElementById('slideshow').textContent=T.stop; fsToggle.textContent=T.stop; resetBar();
@@ -1039,7 +1049,7 @@ document.getElementById('slideshow').onclick=toggleSS;
 /* Velocidade dinâmica (normal e fullscreen) */
 function applyNewSpeed(){
   slideMs = document.fullscreenElement ? (+fsSpeed.value||4000) : (+speedSel.value||4000);
-  if(timer){ clearInterval(timer); timer=setInterval(()=>{ next(); resetBar(); }, slideMs); }
+  if(timer){ clearInterval(timer); timer=setInterval(()=>{ nextGlobal(); resetBar(); }, slideMs); }
   resetBar();
 }
 speedSel.onchange=applyNewSpeed; fsSpeed.onchange=applyNewSpeed;
@@ -1092,12 +1102,10 @@ document.getElementById('headline').title = name;
 
 
   applyTheme(localStorage.getItem('album_theme') || (CONFIG&&CONFIG.theme) || 'dark');
-  themeSel.onchange=e=>applyTheme(e.target.value);
+  themeSel.onchange=e=>{ applyTheme(e.target.value); localStorage.setItem('album_theme', e.target.value); };
 
   applyGradient(localStorage.getItem('album_gradient') || 'pink');
   grad.onchange=e=>applyGradient(e.target.value);
-
-  saveTheme.onclick=()=>{ saveThemePref(); saveTheme.textContent='✅'; setTimeout(()=>saveTheme.textContent='💾',900); };
 
   langToggle.onclick=()=>{ 
     Lang=(Lang==='pt'?'en':'pt'); 
