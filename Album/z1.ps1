@@ -4,14 +4,6 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
-# --- Auto-elevate to Administrator if needed ---
-$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "[INFO] Reexecutando como Administrador..."
-    Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" @args"
-    exit
-}
-
 # --- Garantir modo STA (necessário em Windows 11 para System.Drawing) ---
 if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
     Write-Host "[INFO] Reiniciando o script em modo STA..."
