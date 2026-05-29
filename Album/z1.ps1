@@ -633,7 +633,7 @@ $photoDate = "$yearFolder-$monthNum-01"
 
             $ext = $file.Extension.ToLower()
 
-            if ($ext -in ".mp4", ".mov", ".avi", ".mkv", ".wmv") {
+            if ($ext -in ".mp4", ".mov", ".webm", ".mkv", ".avi", ".mts", ".m2ts", ".3gp", ".hevc") {
                 $thumbRel = $null
             }
             else {
