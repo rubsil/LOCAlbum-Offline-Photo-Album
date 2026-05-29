@@ -14,30 +14,9 @@ html,body{
 }
 
 .container{
-  max-width:1200px; margin:16px auto; padding:14px 18px;
+  max-width:1200px; margin:16px auto; padding:2px 18px 10px 18px;
   height:calc(100% - 32px); box-sizing:border-box;
   display:flex; flex-direction:column;
-}
-
-/* --- Transição suave entre fotos --- */
-.stage img,
-.stage video {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-.stage img.visible,
-.stage video.visible {
-  opacity: 1;
 }
 
 /* ---------- Header / Título + Controlo ---------- */
@@ -47,8 +26,8 @@ header {
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 10px;
-  margin-top: -28px;
-  margin-bottom: -4px;
+  margin-top: 0px;
+  margin-bottom: 2px;
   overflow: hidden;
 }
 .controls {
@@ -56,7 +35,7 @@ header {
   min-width: 320px;
 }
 
-header h1{margin:-28px 0 0 0;font-size:30px;letter-spacing:0.4px}
+header h1{margin:0;font-size:30px;letter-spacing:0.4px}
 
 .titulo-brilhante {
   font-size: 42px;
@@ -104,8 +83,8 @@ header h1#headline {
 
 /* Painel de controlos à direita (3 linhas) */
 .controls{
-  display:flex; flex-direction:column; align-items:flex-end; gap:6px; margin-left:auto; text-align:right;
-  background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:10px; backdrop-filter:blur(6px)
+  display:flex; flex-direction:column; align-items:flex-end; gap:3px; margin-left:auto; text-align:right;
+  background:rgba(255,255,255,0.03); padding:5px 8px; border-radius:10px; backdrop-filter:blur(6px)
 }
 .controls-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
 .controls-row+.controls-row{margin-top:4px}
@@ -122,7 +101,7 @@ button.active{background:var(--accent); color:#071018; font-weight:700}
 #filterBar{
   display:flex;
   gap:8px;
-  margin:-26px 0 4px 0;
+  margin:4px 0 6px 0;
   align-items:center;
 }
 #filterBar button{
@@ -137,7 +116,7 @@ nav#years{
   flex-wrap:nowrap;
   overflow-x:auto;
   gap:8px;
-  padding-bottom:6px;
+  padding-bottom:4px;
   scrollbar-width: thin;
 }
 nav#years::-webkit-scrollbar{
@@ -149,7 +128,7 @@ nav#years::-webkit-scrollbar-thumb{
 }
 nav#years{
   margin-top:0px;
-  margin-bottom:4px;
+  margin-bottom:3px;
 }
 nav#months {
   display: flex;
@@ -157,7 +136,7 @@ nav#months {
   overflow-x: auto;
   gap: 8px;
   margin-top: 0px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   scrollbar-width: thin;
 }
 
@@ -1118,6 +1097,12 @@ document.getElementById('headline').title = name;
     renderYears();
     if(currentYear) renderMonths(currentYear);
     if(currentYear && currentMonth) renderThumbs(currentYear,currentMonth);
+    if(flatList[curIdx]){
+      metaEl.textContent = fmtDate(flatList[curIdx].date);
+      const a = ageStr(flatList[curIdx].date);
+      ageEl.style.display = a ? 'block' : 'none';
+      ageEl.textContent = a ? '🍼 ' + a : '';
+    }
   };
   langToggle.textContent=(Lang==='pt')?'🇵🇹 / 🇬🇧':'🇬🇧 / 🇵🇹';
   langToggle.title=(Lang==='pt')?'Mudar para inglês':'Switch to Portuguese';
