@@ -236,6 +236,18 @@ catch {}
 $files = Get-ChildItem -Path $src -Include *.jpg,*.jpeg,*.png,*.gif,*.webp,*.tif,*.tiff,*.heic,*.heif,
         *.mp4,*.mov,*.webm,*.mkv,*.avi,*.mts,*.m2ts,*.3gp,*.hevc -Recurse
 
+$heicCount = ($files | Where-Object { $_.Extension -match '\.(heic|heif)$' }).Count
+if ($heicCount -gt 0 -and -not (Get-Command exiftool -ErrorAction SilentlyContinue)) {
+    if ($lang -eq "en") {
+        Write-Host "[WARNING] $heicCount HEIC file(s) found. Without exiftool, dates may not be detected."
+        Write-Host "          Also note: HEIC may not display in Chrome/Firefox on Windows."
+    } else {
+        Write-Host "[AVISO] $heicCount ficheiro(s) HEIC encontrado(s). Sem exiftool, datas podem nao ser detetadas."
+        Write-Host "        Nota: HEIC pode nao exibir no Chrome/Firefox no Windows."
+    }
+    Write-Host ""
+}
+
 foreach($f in $files){
     $dt = Get-DateSmart $f
 
@@ -287,16 +299,14 @@ else {
         else {
             $baseName = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
             $ext = [System.IO.Path]::GetExtension($f.Name)
-            $newName = "${baseName}_DUP$ext"
-            $newTarget = Join-Path $tgt $newName
+            $dupIndex = 1
+            do {
+                $newName = "${baseName}_DUP$dupIndex$ext"
+                $newTarget = Join-Path $tgt $newName
+                $dupIndex++
+            } while (Test-Path $newTarget)
 
-            # ✅ Proteção anti-loop — se o DUP já existir, ignora
-            if (Test-Path $newTarget) {
-                Write-Host "[SKIP] $($f.Name) (ja existe versao _DUP anterior)"
-                continue
-            }
-
-Copy-Item $f.FullName -Destination $newTarget
+            Copy-Item $f.FullName -Destination $newTarget
             Write-Host "[COPIADO] $($f.Name) (conteudo diferente, guardado como $newName)"
             # Descongelar pasta de destino
             $frozenFlag = Join-Path $tgt "_frozen.flag"
