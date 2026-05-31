@@ -14,7 +14,7 @@ html,body{
 }
 
 .container{
-  max-width:1200px; margin:16px auto; padding:2px 18px 10px 18px;
+  max-width:1200px; margin:4px auto; padding:0px 18px 10px 18px;
   height:calc(100% - 32px); box-sizing:border-box;
   display:flex; flex-direction:column;
 }
@@ -22,14 +22,27 @@ html,body{
 /* ---------- Header / Título + Controlo ---------- */
 header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 10px;
-  margin-top: 0px;
-  margin-bottom: 2px;
+  margin-top: -1px;
+  margin-bottom: 4px;
   overflow: hidden;
 }
+
+.titleColumn{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+  flex:1 1 auto;
+}
+
+.titleRow #langToggle{
+  flex-shrink:0;
+}
+
 .controls {
   flex: 0 0 auto;
   min-width: 320px;
@@ -55,6 +68,15 @@ header h1{margin:0;font-size:30px;letter-spacing:0.4px}
   max-width: 100%;
 }
 
+.langFooter{
+  position:absolute;
+  right:18px;
+  bottom:12px;
+  cursor:pointer;
+  font-size:20px;
+  line-height:1;
+  z-index:100;
+}
 
 /* --- Truncamento automático e adaptativo do título --- */
 header > div:first-child {
@@ -83,8 +105,8 @@ header h1#headline {
 
 /* Painel de controlos à direita (3 linhas) */
 .controls{
-  display:flex; flex-direction:column; align-items:flex-end; gap:3px; margin-left:auto; text-align:right;
-  background:rgba(255,255,255,0.03); padding:5px 8px; border-radius:10px; backdrop-filter:blur(6px)
+  display:flex; flex-direction:column; align-items:flex-end; gap:1px; margin-left:auto; margin-top:3px; text-align:center;
+  background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:10px; backdrop-filter:blur(6px)
 }
 .controls-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
 .controls-row+.controls-row{margin-top:4px}
@@ -101,7 +123,7 @@ button.active{background:var(--accent); color:#071018; font-weight:700}
 #filterBar{
   display:flex;
   gap:8px;
-  margin:4px 0 6px 0;
+  margin:4px 0 0 0;
   align-items:center;
 }
 #filterBar button{
@@ -128,7 +150,7 @@ nav#years::-webkit-scrollbar-thumb{
 }
 nav#years{
   margin-top:0px;
-  margin-bottom:3px;
+  margin-bottom:0px;
 }
 nav#months {
   display: flex;
@@ -136,14 +158,14 @@ nav#months {
   overflow-x: auto;
   gap: 8px;
   margin-top: 0px;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   scrollbar-width: thin;
 }
 
 
 /* ---------- Área principal ---------- */
 main.viewer{
-  flex:1; background:var(--card); border-radius:12px; padding:12px;
+  flex:1; background:var(--card); border-radius:12px; padding:6px;
   display:grid; grid-template-columns:1fr 360px; gap:12px;
   position:relative; transition:background .3s; overflow:hidden
 }
@@ -152,8 +174,11 @@ main.viewer{
   position:relative; overflow:hidden; background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.02))
 }
 .stage img,.stage video{
+  position:absolute;
+  inset:0;
+  margin:auto;
   max-width:100%; max-height:100%; width:auto; height:auto;
-  object-fit:contain; display:block; border-radius:6px; opacity:0; transition:opacity .6s ease
+  object-fit:contain; border-radius:6px; opacity:0; transition:opacity .6s ease
 }
 .stage img.visible,.stage video.visible{opacity:1}
 
@@ -182,7 +207,13 @@ main.viewer{
 .thumb .date{font-size:12px;color:var(--muted);white-space:nowrap}
 .videoIcon{position:absolute;left:6px;bottom:6px;font-size:18px;color:#fff;text-shadow:0 0 4px #000;background:rgba(0,0,0,.4);border-radius:4px;padding:2px 4px;pointer-events:none}
 
-.footer{margin-top:8px;color:var(--muted);font-size:13px;text-align:center}
+.footer{
+  margin-top:3px;
+  margin-bottom:-32px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+}
 
 /* ---------- Fullscreen: esconder UI (filtros, anos/meses, thumbs) ---------- */
 :fullscreen header,
@@ -254,10 +285,15 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
 <body>
 <div class="container">
   <header>
-    <div>
-      <h1 id="headline" class="titulo-brilhante">Memórias</h1>
-      <div id="subtitle"></div>
-    </div>
+<div class="titleColumn">
+  <h1 id="headline" class="titulo-brilhante">Memórias</h1>
+  <div id="subtitle"></div>
+  <div id="filterBar">
+    <button id="fltAll" class="active">📁 Tudo</button>
+    <button id="fltPhotos">📷 Fotos</button>
+    <button id="fltVideos">🎬 Vídeos</button>
+  </div>
+</div>
 
     <div class="controls">
       <!-- linha 1 -->
@@ -307,19 +343,8 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
           </select>
         </label>
       </div>
-      <!-- linha 3 -->
-      <div class="controls-row">
-        <div id="langToggle" style="cursor:pointer;font-size:20px;line-height:1.2">🇵🇹 / 🇬🇧</div>
-      </div>
     </div>
   </header>
-
-  <!-- Filtros ficam acima dos anos (mais espaço para a foto) -->
-  <div id="filterBar">
-    <button id="fltAll"   class="active">📁 Tudo</button>
-    <button id="fltPhotos">📷 Fotos</button>
-    <button id="fltVideos">🎬 Vídeos</button>
-  </div>
 
   <nav id="years"></nav>
   <nav id="months"></nav>
@@ -336,6 +361,8 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
   </main>
 
   <div class="footer" id="footerLine"></div>
+<div id="langToggle" class="langFooter">
+  🇵🇹 / 🇬🇧
 </div>
 
 <!-- HUD do fullscreen (só quando em F11) -->
@@ -369,14 +396,14 @@ const STR = {
     speed:"Velocidade",
     theme:"Tema",
     gradient:"Gradiente",
-    start:"Iniciar slideshow (space)",
-    stop:"Parar slideshow (space)",
+    start:"Iniciar slideshow (espaço)",
+    stop:"Parar slideshow (espaço)",
     exit:"Sair",
     fullscreen:"Fullscreen (F)",
     all:"📁 Tudo",
     photos:"📷 Fotos",
     videos:"🎬 Vídeos",
-    by:"Feito por",
+    by:"Produzido por",
     donate:"Doações",
     project:"Projeto"
   },
@@ -495,7 +522,7 @@ function setTexts(){
 
   ph.textContent = T.choose;
 
-  const by = `${T.by} ${(CONFIG&&CONFIG.author)||'Ruben Silva'} • ${(CONFIG&&CONFIG.projectName)||'LOCALBUM'}`
+  const by = `${T.by} ${(CONFIG&&CONFIG.author)||'Rúben Silva'} • ${(CONFIG&&CONFIG.projectName)||'LOCALBUM'}`
              + ((CONFIG&&CONFIG.donateURL)?` • ${T.donate}: ${CONFIG.donateURL}`:'');
 
   document.getElementById('footerLine').textContent = by;
