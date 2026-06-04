@@ -188,6 +188,7 @@ nav#months button{
 
 /* ---------- Área principal ---------- */
 main.viewer{
+  position: relative;
   flex:1;
   background:var(--card);
   border-radius:12px;
@@ -201,18 +202,23 @@ main.viewer{
   width:100%; height:100%; border-radius:8px; display:flex; align-items:center; justify-content:center;
   position:relative; overflow:hidden; background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,.02))
 }
-.stage img,.stage video{
-  position:absolute;
-  inset:0;
-  margin:auto;
-  max-width:100%; max-height:100%; width:auto; height:auto;
-  object-fit:contain; border-radius:6px; opacity:0; transition:opacity .6s ease
+.stage img, .stage video {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: auto;
+  height: auto;
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .6s ease;
 }
 .stage img.visible,.stage video.visible{opacity:1}
 
-.meta{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted);z-index:1001}
-.age{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#ffd;z-index:1001}
-.counter{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#fff;z-index:1001;display:none}
+.meta{position:absolute;left:14px;bottom:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted);z-index:1001}
+.age{position:absolute;right:14px;bottom:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#ffd;z-index:1001}
+.counter{position:absolute;left:14px;top:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#fff;z-index:1001;display:none}
 .progress{position:absolute;left:0;top:0;height:3px;width:0;background:var(--accent);z-index:1002;transition:width linear}
 
 /* Thumbs + data visível */
@@ -231,7 +237,8 @@ main.viewer{
 .thumb{display:flex;gap:10px;align-items:center;padding:6px;border-radius:8px;cursor:pointer;position:relative}
 .thumb:hover{background:rgba(255,255,255,.06)}
 .thumb.active{background:rgba(255,255,255,.12)}
-.thumb img,.thumb video{width:96px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 auto}
+.thumb img,.thumb video{width:96px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 auto; transition: transform 0.2s ease-out;}
+.thumb:hover img, .thumb:hover video{transform: scale(1.04);} /* Efeito de aproximação premium ao passar o rato */
 .thumb .date{font-size:12px;color:var(--muted);white-space:nowrap}
 .thumb .videoIcon{position:absolute;left:6px;bottom:6px;font-size:18px;color:#fff;text-shadow:0 0 4px #000;background:rgba(0,0,0,.4);border-radius:4px;padding:2px 4px;pointer-events:none}
 
@@ -249,28 +256,108 @@ main.viewer{
 :fullscreen nav#years,
 :fullscreen nav#months,
 :fullscreen .thumbs,
-:fullscreen #onThisDayBanner{
+:fullscreen #onThisDayBanner,
+:fullscreen #scrollTopBtn,
+:fullscreen .footer,
+:fullscreen #langToggle {
   display:none!important
 }
 :fullscreen main.viewer{ grid-template-columns:1fr }
 
 /* ---------- HUD Fullscreen ---------- */
-.fsHud{
-  position:fixed; right:12px; bottom:12px; display:none; gap:8px; z-index:2147483646; align-items:center;
-  background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.2); padding:8px 10px; border-radius:10px;
-  opacity:0; transition:opacity .25s;
+.fsHud {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  display: flex;
+  gap: 10px;
+  z-index: 2147483646;
+  align-items: center;
+  
+  /* Vidro Fosco Ligeiramente Mais Escuro para Alto Contraste */
+  background: rgba(13, 15, 19, 0.82); 
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  
+  padding: 3px 10px;
+  border-radius: 30px; 
+  
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  
+  transform: translateX(-50%) translateY(6px); 
+  transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
 }
-.fsHud.show{ opacity:1; }
+
+.fsHud.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Botões (Iniciar/Sair) muito mais compactos e elegantes */
+#fsToggle, #fsExit {
+  background: var(--accent); 
+  color: #0f1115;
+  border: none;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+#fsToggle:hover, #fsExit:hover {
+  background: #fff;
+  transform: scale(1.02);
+}
+
+/* Texto descritivo da velocidade */
+.fsHud label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+/* O seletor de velocidade visível */
+#fsSpeed {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 12px; 
+  cursor: pointer;
+  outline: none;
+  font-size: 10.5px;
+  transition: background 0.2s;
+}
+#fsSpeed:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* SOLUÇÃO DA DROPDOWN INTERNA: Força as opções a terem fundo escuro e texto legível */
+#fsSpeed option {
+  background: #131519 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  padding: 6px;
+}
 
 /* ---------- Setas laterais ---------- */
-.arrow{position:fixed;top:50%;transform:translateY(-50%);font-size:42px;font-weight:400;color:rgba(255,255,255,.8);
+.arrow{position:fixed;top:50%;transform:translateY(-50%);font-size:42px;font-weight:400;color:rgba(255,255,255,.6);
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);width:56px;height:56px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2147483647;transition:all .25s ease;
-  box-shadow:0 0 10px rgba(0,0,0,.4);opacity:0;pointer-events:none}
-.arrow:hover{background:rgba(255,255,255,.15);transform:translateY(-50%) scale(1.1);color:#fff}
-.arrow.left{left:28px}.arrow.right{right:28px}
-:fullscreen .arrow{display:flex;opacity:1;pointer-events:auto}
-body.show-arrows .arrow{opacity:1;pointer-events:auto}
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2147483647;
+  transition: opacity .25s ease, background .25s ease, transform .25s ease, color .25s ease;
+  box-shadow:0 0 10px rgba(0,0,0,.4);opacity:0;pointer-events:none;
+  line-height: 1; box-sizing: border-box;}
+.arrow:hover{background:rgba(255,255,255,.15);transform:translateY(-50%) scale(1.1) !important;color:#fff;opacity:1 !important}
+.arrow.left{left:28px; padding-bottom:7px; padding-right:4px;}
+.arrow.right{right:28px; padding-bottom:7px; padding-left:4px;}
+:fullscreen .arrow{display:flex;opacity:0.35;pointer-events:auto}
+body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
 
 /* ---------- Responsivo ---------- */
 @media(max-width:900px){
@@ -351,6 +438,66 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
 
 .fsHud{ display:flex; opacity:0; pointer-events:none; }
 .fsHud.show{ opacity:1; pointer-events:auto; }
+
+#stageBgBlur {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(30px) brightness(0.5);
+  opacity: 0.45;
+  transform: scale(1.1);
+  pointer-events: none;
+  z-index: 0;
+  transition: background-image 0.6s ease;
+}
+
+#scrollTopBtn {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.2s ease, background 0.2s ease;
+  font-size: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+#scrollTopBtn.show { opacity: 1; pointer-events: auto; }
+#scrollTopBtn:hover { background: var(--accent); color: #071018; transform: scale(1.1); }
+
+/* Barra de scroll personalizada  */
+::-webkit-scrollbar {
+  width: 6px; 
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1); 
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); 
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Suporte para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
+}
+
 </style>
 </head>
 <body>
@@ -438,6 +585,7 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
 
   <main class="viewer">
     <section class="stage" id="stage">
+      <div id="stageBgBlur"></div>
       <div id="ph" style="color:var(--muted)">👋 Escolhe um ano e mês para começar.</div>
       <div class="progress" id="bar"></div>
       <div class="counter" id="counter"></div>
@@ -445,6 +593,7 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
       <div class="age" id="age" style="display:none"></div>
     </section>
     <aside class="thumbs" id="thumbs"></aside>
+    <button id="scrollTopBtn" title="Ir para o topo">↑</button>
   </main>
 
   <div class="footer" id="footerLine"></div>
@@ -869,16 +1018,89 @@ function renderMonths(y){
 }
 
 function setFilter(f){
-  currentFilter=f;
-  [fltAll,fltPhotos,fltVideos].forEach(b=>b.classList.remove('active'));
-  ({all:fltAll,photos:fltPhotos,videos:fltVideos}[f]).classList.add('active');
+  currentFilter = f;
+  [fltAll, fltPhotos, fltVideos].forEach(b => b.classList.remove('active'));
+  ({ all: fltAll, photos: fltPhotos, videos: fltVideos }[f]).classList.add('active');
+
+  if (flatList.length === 0) {
+    renderYears();
+    monthsEl.innerHTML = '';
+    thumbsEl.innerHTML = '';
+    return;
+  }
+
+  // 1. ÂNCORA REAL: Damos prioridade absoluta ao Ano e Mês selecionados nos botões da barra lateral
+  let anchorYear = currentYear;
+  let anchorMonth = currentMonth;
+
+  // Se por acaso os botões estiverem limpos (ex: início do site), tentamos ler o item ativo ou o primeiro do álbum
+  if (!anchorYear && typeof curIdx === 'number' && flatList[curIdx]) {
+    anchorYear = flatList[curIdx].year;
+    anchorMonth = flatList[curIdx].month;
+  }
+
+  // 2. Filtrar todos os itens do álbum que correspondem ao filtro selecionado
+  const validItems = flatList.filter(x => matchFilterByName(x.name, currentFilter));
+
+  if (validItems.length === 0) {
+    // Salvaguarda extrema se o filtro não contiver nada no álbum inteiro
+    currentYear = null; currentMonth = null;
+    renderYears(); monthsEl.innerHTML = ''; thumbsEl.innerHTML = '';
+    stage.querySelectorAll('img,video').forEach(n => n.remove());
+    if (ph) {
+      ph.style.display = 'block';
+      ph.textContent = Lang === 'pt' ? 'Nenhum conteúdo encontrado para este filtro.' : 'No content found for this filter.';
+    }
+    metaEl.style.display = 'none'; ageEl.style.display = 'none'; counterEl.style.display = 'none';
+    return;
+  }
+
+  if (!anchorYear) anchorYear = validItems[0].year;
+  if (!anchorMonth) anchorMonth = validItems[0].month;
+
+  // 3. Tentar encontrar o PRIMEIRO item válido EXATAMENTE no mesmo Ano e Mês dos botões
+  let bestItem = validItems.find(it => it.year === anchorYear && it.month === anchorMonth);
+
+  // 4. Se o mês dos botões ficou 100% VAZIO para o filtro, aí sim aplicamos o cálculo de proximidade cronológica
+  if (!bestItem) {
+    const monthNamesPt = ["janeiro","fevereiro","marco","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+    const monthNamesEn = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+    
+    function getMonthValue(mName) {
+      if (!mName) return 1;
+      const norm = mName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (norm === "ecografias") return 0;
+      let idx = monthNamesPt.findIndex(m => norm.includes(m));
+      if (idx === -1) idx = monthNamesEn.findIndex(m => norm.includes(m));
+      return idx !== -1 ? (idx + 1) : 1;
+    }
+
+    const anchorValue = parseInt(anchorYear) + (getMonthValue(anchorMonth) / 13);
+    let minDiff = Infinity;
+    bestItem = validItems[0];
+
+    validItems.forEach(it => {
+      const itValue = parseInt(it.year) + (getMonthValue(it.month) / 13);
+      const diff = Math.abs(itValue - anchorValue);
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestItem = it;
+      }
+    });
+  }
+
+  // 5. Sincronizar os botões do menu com o local do item final decidido
+  currentYear = bestItem.year;
+  currentMonth = bestItem.month;
 
   renderYears();
-  if(currentYear){ renderMonths(currentYear); }
-  if(currentYear && currentMonth){ renderThumbs(currentYear,currentMonth); }
+  renderMonths(currentYear);
+  renderThumbs(currentYear, currentMonth);
 
-  if(flatList.length > 0 && typeof curIdx === 'number' && flatList[curIdx]){
-    show(curIdx);
+  // 6. Abrir o ficheiro no visualizador grande
+  const globalIdx = indexMap.get(`${bestItem.year}|${bestItem.month}|${bestItem.name}`);
+  if (globalIdx !== undefined) {
+    show(globalIdx);
   }
 }
 
@@ -999,7 +1221,10 @@ function show(i){
 
   stage.querySelectorAll('img,video').forEach(n=>n.remove());
   if(ph) ph.style.display='none';
-
+  const bgBlurEl = document.getElementById('stageBgBlur');
+    if (bgBlurEl) {
+     bgBlurEl.style.backgroundImage = `url("${encodeURI(it.thumb || it.src)}")`;
+  }
   const ext=it.name.split('.').pop().toLowerCase();
   const isVideo = VIDEO_EXTS.includes(ext);
   const el = isVideo ? document.createElement('video') : document.createElement('img');
@@ -1357,6 +1582,19 @@ function init(){
       setTimeout(()=>{ const idx = indexMap.get(`${ly}|${lm}|${ln}`);
       if(typeof idx === "number") show(idx); },80);
     },80);
+  }
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  if (thumbsEl && scrollTopBtn) {
+    thumbsEl.addEventListener('scroll', () => {
+      if (thumbsEl.scrollTop > 200 || thumbsEl.scrollLeft > 200) {
+        scrollTopBtn.classList.add('show');
+      } else {
+        scrollTopBtn.classList.remove('show');
+      }
+    });
+    scrollTopBtn.onclick = () => {
+      thumbsEl.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    };
   }
 }
 init();
