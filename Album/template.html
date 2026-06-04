@@ -22,30 +22,19 @@ html,body{
 /* ---------- Header / Título + Controlo ---------- */
 header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 10px;
-  margin-top: -1px;
-  margin-bottom: 4px;
-  overflow: hidden;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
-.titleColumn{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  min-width:0;
-  flex:1 1 auto;
-}
-
-.titleRow #langToggle{
-  flex-shrink:0;
-}
-
-.controls {
-  flex: 0 0 auto;
-  min-width: 320px;
+.titleColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: center;
 }
 
 header h1{margin:0;font-size:30px;letter-spacing:0.4px}
@@ -78,7 +67,7 @@ header h1{margin:0;font-size:30px;letter-spacing:0.4px}
   z-index:100;
 }
 
-/* --- Truncamento automático e adaptativo do título --- */
+/* Truncamento do título */
 header > div:first-child {
   flex: 1 1 auto;
   min-width: 0;
@@ -95,21 +84,25 @@ header h1#headline {
   max-width: 100%;
 }
 
-
 @keyframes brilhoSuave{0%{background-position:200% center}100%{background-position:-200% center}}
 
-/* ========================= */
-/* REMOVER SUBTÍTULO         */
-/* ========================= */
 #subtitle { display: none !important; }
 
-/* Painel de controlos à direita (3 linhas) */
+/* Painel de controlos compacto e adaptável (2 linhas) */
 .controls{
-  display:flex; flex-direction:column; align-items:flex-end; gap:1px; margin-left:auto; margin-top:3px; text-align:center;
-  background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:10px; backdrop-filter:blur(6px)
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:fit-content;
+  flex:0 0 auto;
+  margin-left:auto;
+  align-self:center;
+  background:rgba(255,255,255,0.03);
+  padding:6px 10px;
+  border-radius:10px;
+  backdrop-filter:blur(6px);
 }
-.controls-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
-.controls-row+.controls-row{margin-top:4px}
+.controls-row{display:flex;flex-wrap:nowrap;gap:8px;justify-content:flex-start;align-items:center}
 button{
   background:transparent; border:1px solid rgba(255,255,255,.12);
   padding:8px 12px; border-radius:10px; color:#fff; cursor:pointer; transition:.15s
@@ -119,55 +112,90 @@ button.active{background:var(--accent); color:#071018; font-weight:700}
 .select{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px}
 #langToggle{user-select:none;display:flex;align-items:center;gap:4px;font-size:20px}
 
-/* ---------- Barra de filtros (sempre texto branco) ---------- */
+/* ---------- Barra de filtros a toda a largura ---------- */
 #filterBar{
   display:flex;
-  gap:8px;
-  margin:4px 0 0 0;
+  gap:6px;
+  margin:0;
   align-items:center;
+  width:100%;
 }
+
 #filterBar button{
-  display:inline-flex; align-items:center; gap:6px; color:#fff;
+  padding:6px 10px;
+  font-size:13px;
+  border-radius:8px;
+  flex-shrink:0;
 }
+
 #filterBar button.active{ background:rgba(255,255,255,.18) }
 #filterBar button:hover{  background:rgba(255,255,255,.10) }
 
+#onThisDayBanner{
+  display:none;
+  flex:1;
+  padding:4px 12px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;
+  font-size:12px;
+  color:var(--muted);
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  white-space:nowrap;
+  margin-left:8px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#onThisDayCount{
+  background:var(--accent);
+  color:#071018;
+  border-radius:6px;
+  padding:2px 8px;
+  font-weight:700;
+  font-size:12px;
+}
+
 /* ---------- Navegação por ano/mês ---------- */
-nav#years{
+nav#years,
+nav#months{
   display:flex;
   flex-wrap:nowrap;
   overflow-x:auto;
-  gap:8px;
-  padding-bottom:4px;
-  scrollbar-width: thin;
+  gap:6px;
+  margin:0 0 6px 0;
+  padding-bottom:2px;
 }
-nav#years::-webkit-scrollbar{
+
+nav#years::-webkit-scrollbar,
+nav#months::-webkit-scrollbar{
   height:6px;
 }
-nav#years::-webkit-scrollbar-thumb{
+nav#years::-webkit-scrollbar-thumb,
+nav#months::-webkit-scrollbar-thumb{
   background:rgba(255,255,255,.2);
   border-radius:4px;
 }
-nav#years{
-  margin-top:0px;
-  margin-bottom:0px;
-}
-nav#months {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 8px;
-  margin-top: 0px;
-  margin-bottom: 4px;
-  scrollbar-width: thin;
-}
 
+nav#years button,
+nav#months button{
+  padding:5px 10px;
+  font-size:13px;
+}
 
 /* ---------- Área principal ---------- */
 main.viewer{
-  flex:1; background:var(--card); border-radius:12px; padding:6px;
-  display:grid; grid-template-columns:1fr 360px; gap:12px;
-  position:relative; transition:background .3s; overflow:hidden
+  flex:1;
+  background:var(--card);
+  border-radius:12px;
+  padding:4px;
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:10px;
+  overflow:hidden;
 }
 .stage{
   width:100%; height:100%; border-radius:8px; display:flex; align-items:center; justify-content:center;
@@ -205,7 +233,7 @@ main.viewer{
 .thumb.active{background:rgba(255,255,255,.12)}
 .thumb img,.thumb video{width:96px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 auto}
 .thumb .date{font-size:12px;color:var(--muted);white-space:nowrap}
-.videoIcon{position:absolute;left:6px;bottom:6px;font-size:18px;color:#fff;text-shadow:0 0 4px #000;background:rgba(0,0,0,.4);border-radius:4px;padding:2px 4px;pointer-events:none}
+.thumb .videoIcon{position:absolute;left:6px;bottom:6px;font-size:18px;color:#fff;text-shadow:0 0 4px #000;background:rgba(0,0,0,.4);border-radius:4px;padding:2px 4px;pointer-events:none}
 
 .footer{
   margin-top:3px;
@@ -215,15 +243,18 @@ main.viewer{
   text-align:center;
 }
 
-/* ---------- Fullscreen: esconder UI (filtros, anos/meses, thumbs) ---------- */
+/* ---------- Fullscreen ---------- */
 :fullscreen header,
 :fullscreen #filterBar,
 :fullscreen nav#years,
 :fullscreen nav#months,
-:fullscreen .thumbs{ display:none!important }
+:fullscreen .thumbs,
+:fullscreen #onThisDayBanner{
+  display:none!important
+}
 :fullscreen main.viewer{ grid-template-columns:1fr }
 
-/* ---------- HUD Fullscreen (aparece ao mexer o rato) ---------- */
+/* ---------- HUD Fullscreen ---------- */
 .fsHud{
   position:fixed; right:12px; bottom:12px; display:none; gap:8px; z-index:2147483646; align-items:center;
   background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.2); padding:8px 10px; border-radius:10px;
@@ -247,11 +278,7 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
   .thumbs{order:2;border-left:none;border-top:1px solid rgba(255,255,255,.06);height:160px;display:flex;overflow-x:auto;flex-direction:row}
 }
 
-/* --- Separador visível entre dias --- */
-.thumbs {
-  position: relative;
-}
-
+/* Separador de dias */
 .day-separator {
   position: relative;
   width: 100%;
@@ -279,24 +306,71 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
   transition: opacity 0.3s ease;
 }
 
+/* ---------- Overlay Neste Dia ---------- */
+.otdOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  align-items:center;
+  justify-content:center;
+}
+.otdOverlay.show{ display:flex; }
+.otdWindow{
+  width:min(1200px,95vw);
+  height:min(85vh,900px);
+  background:var(--card);
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.otdHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  gap:12px;
+  font-size:18px;
+  font-weight:600;
+}
+.otdContent{ flex:1; overflow:auto; padding:16px; }
+.otdYear{ margin-bottom:24px; }
+.otdYear h2{ margin:0 0 10px 0; color:var(--accent); }
+.otdGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:10px;
+}
+.otdCard{ cursor:pointer; }
+.otdCard img, .otdCard video{ width:100%; height:120px; object-fit:cover; border-radius:8px; }
+.otdDate{ margin-top:4px; font-size:12px; color:var(--muted); text-align:center; }
 
+.fsHud{ display:flex; opacity:0; pointer-events:none; }
+.fsHud.show{ opacity:1; pointer-events:auto; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-<div class="titleColumn">
-  <h1 id="headline" class="titulo-brilhante">Memórias</h1>
-  <div id="subtitle"></div>
-  <div id="filterBar">
-    <button id="fltAll" class="active">📁 Tudo</button>
-    <button id="fltPhotos">📷 Fotos</button>
-    <button id="fltVideos">🎬 Vídeos</button>
-  </div>
-</div>
-
+    <div class="titleColumn">
+      <h1 id="headline" class="titulo-brilhante">Memórias</h1>
+<div id="subtitle"></div>
+      <div id="filterBar">
+        <button id="fltAll" class="active">📁 Tudo</button>
+        <button id="fltPhotos">📷 Fotos</button>
+        <button id="fltVideos">🎬 Vídeos</button>
+        <div id="onThisDayBanner" onclick="openOnThisDay()">
+          <span id="onThisDayText"></span>
+          <span id="onThisDayCount"></span>
+        </div>
+      </div>
+    </div>
+    
     <div class="controls">
-      <!-- linha 1 -->
       <div class="controls-row">
         <button id="fullscreen">Fullscreen (F)</button>
         <button id="slideshow">Iniciar slideshow (space)</button>
@@ -310,7 +384,6 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
           </select>
         </label>
       </div>
-      <!-- linha 2 -->
       <div class="controls-row">
         <label style="display:flex;align-items:center;gap:6px">
           <span id="themeLbl">Tema</span>
@@ -349,6 +422,20 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
   <nav id="years"></nav>
   <nav id="months"></nav>
 
+  <div id="zoomOverlay" onclick="closeZoom()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9998;align-items:center;justify-content:center;cursor:zoom-out">
+    <img id="zoomImg" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
+  </div>
+
+  <div id="onThisDayOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;backdrop-filter:blur(4px);">
+    <div style="width:min(1200px,95vw);height:min(90vh,900px);margin:3vh auto;background:var(--card);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);">
+        <div id="onThisDayTitle" style="font-size:20px;font-weight:700"></div>
+        <button onclick="closeOnThisDay()">✕</button>
+      </div>
+      <div id="onThisDayContent" style="flex:1;overflow:auto;padding:18px;"></div>
+    </div>
+  </div>
+
   <main class="viewer">
     <section class="stage" id="stage">
       <div id="ph" style="color:var(--muted)">👋 Escolhe um ano e mês para começar.</div>
@@ -361,28 +448,35 @@ body.show-arrows .arrow{opacity:1;pointer-events:auto}
   </main>
 
   <div class="footer" id="footerLine"></div>
-<div id="langToggle" class="langFooter">
-  🇵🇹 / 🇬🇧
-</div>
+  <div id="langToggle" class="langFooter">🇵🇹 / 🇬🇧</div>
 
-<!-- HUD do fullscreen (só quando em F11) -->
-<div class="fsHud" id="fsHud">
-  <button id="fsToggle">Iniciar slideshow</button>
-  <label style="display:flex;align-items:center;gap:6px">
-    <span id="fsSpeedLbl">Velocidade</span>
-    <select id="fsSpeed" class="select">
-      <option value="2000">2s</option>
-      <option value="4000" selected>4s</option>
-      <option value="8000">8s</option>
-      <option value="15000">15s</option>
-    </select>
-  </label>
-  <button id="fsExit">Sair</button>
-</div>
+  <div class="fsHud" id="fsHud">
+    <button id="fsToggle">Iniciar slideshow</button>
+    <label style="display:flex;align-items:center;gap:6px">
+      <span id="fsSpeedLbl">Velocidade</span>
+      <select id="fsSpeed" class="select">
+        <option value="2000">2s</option>
+        <option value="4000" selected>4s</option>
+        <option value="8000">8s</option>
+        <option value="15000">15s</option>
+      </select>
+    </label>
+    <button id="fsExit">Sair</button>
+  </div>
 
-<!-- Setas -->
-<div class="arrow left"  id="arrowLeft">‹</div>
-<div class="arrow right" id="arrowRight">›</div>
+  <div class="arrow left"  id="arrowLeft">‹</div>
+  <div class="arrow right" id="arrowRight">›</div>
+
+  <div id="otdOverlay" class="otdOverlay" onclick="closeOnThisDay(event)">
+    <div class="otdWindow" onclick="event.stopPropagation()">
+      <div class="otdHeader">
+        <span id="otdTitle">📅 Neste dia ao longo dos anos</span>
+        <button onclick="closeOnThisDay()">✕</button>
+      </div>
+      <div id="otdContent" class="otdContent"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* Estas duas linhas são substituídas pelo z1.ps1 */
@@ -405,7 +499,8 @@ const STR = {
     videos:"🎬 Vídeos",
     by:"Produzido por",
     donate:"Doações",
-    project:"Projeto"
+    project:"Projeto",
+    memories: "Memórias de"
   },
   en:{
     choose:"👋 Pick a year and month to begin.",
@@ -421,7 +516,8 @@ const STR = {
     videos:"🎬 Videos",
     by:"Made by",
     donate:"Donations",
-    project:"Project"
+    project:"Project",
+    memories: "Memories of"
   }
 };
 
@@ -457,7 +553,6 @@ const fsSpeed = document.getElementById('fsSpeed');
 const fsHud   = document.getElementById('fsHud');
 const fsToggle= document.getElementById('fsToggle');
 const themeSel= document.getElementById('theme');
-const saveTheme= document.getElementById('saveTheme');
 const grad    = document.getElementById('grad');
 const langToggle=document.getElementById('langToggle');
 
@@ -467,6 +562,7 @@ const fltVideos=document.getElementById('fltVideos');
 
 let flatList = [], curIdx = 0, timer = null, slideMs = +speedSel.value;
 let currentYear=null, currentMonth=null;
+let otdMatches = [];
 let Lang = localStorage.getItem('album_lang') || (typeof CONFIG!=='undefined' ? (CONFIG.language||'pt') : 'pt');
 
 /* Helpers */
@@ -515,7 +611,6 @@ function setTexts(){
   document.getElementById('slideshow').textContent = timer ? T.stop : T.start;
   fsToggle.textContent = timer ? T.stop : T.start;
 
-  // filtros traduzidos
   document.getElementById('fltAll').textContent    = T.all;
   document.getElementById('fltPhotos').textContent = T.photos;
   document.getElementById('fltVideos').textContent = T.videos;
@@ -528,7 +623,7 @@ function setTexts(){
   document.getElementById('footerLine').textContent = by;
 }
 
-/* Ordenação de meses (PT/EN, sem acentos) */
+/* Ordenação de meses */
 function monthOrder(a, b) {
     const monthNames = [
         "janeiro","fevereiro","marco","abril","maio","junho",
@@ -550,28 +645,20 @@ function monthOrder(a, b) {
         return -1;
     };
 
-    // Ecografias sempre primeiro
     if (normalize(a) === "ecografias") return -1;
     if (normalize(b) === "ecografias") return 1;
 
     const ma = getMonthIndex(a);
     const mb = getMonthIndex(b);
 
-    // Ambos têm mês → ordenar por mês
     if (ma !== -1 && mb !== -1) return ma - mb;
-
-    // Só A tem mês → A vem antes
     if (ma !== -1) return -1;
-
-    // Só B tem mês → B vem antes
     if (mb !== -1) return 1;
 
-    // Nenhum tem mês → ordem alfabética normal
     return a.localeCompare(b, "pt", { numeric: true });
 }
 
-
-/* Formatação de datas (pt-PT / en-GB) */
+/* Formatação de datas */
 function fmtDate(iso){
   const p = iso.split('-');
   const d = new Date(p[0], p[1]-1, p[2]);
@@ -605,22 +692,15 @@ function ageStr(iso){
   if(d.getDate() < bd.getDate()) m--;
   if(m < 0){ y--; m += 12; }
 
-if (Lang === 'pt') {
-  if (y === 0 && m === 0) {
-    const days = Math.floor((d - bd) / 86400000);
-    return `${days} dia${days !== 1 ? 's' : ''}`;
+  if (Lang === 'pt') {
+    if (y === 0 && m === 0) {
+      const days = Math.floor((d - bd) / 86400000);
+      return `${days} dia${days !== 1 ? 's' : ''}`;
+    }
+    if (y === 0) return `${m} ${m === 1 ? 'mês' : 'meses'}`;
+    if (m === 0) return `${y} ano${y !== 1 ? 's' : ''}`;
+    return `${y} ano${y !== 1 ? 's' : ''} e ${m} ${m === 1 ? 'mês' : 'meses'}`;
   }
-
-  if (y === 0) {
-    return `${m} ${m === 1 ? 'mês' : 'meses'}`;
-  }
-
-  if (m === 0) {
-    return `${y} ano${y !== 1 ? 's' : ''}`;
-  }
-
-  return `${y} ano${y !== 1 ? 's' : ''} e ${m} ${m === 1 ? 'mês' : 'meses'}`;
-}
 
   if(y===0 && m===0){
     const days = Math.floor((d-bd)/86400000);
@@ -631,70 +711,66 @@ if (Lang === 'pt') {
   return `${y} year${y!==1?'s':''} and ${m} month${m!==1?'s':''}`;
 }
 
-
-// --- Extensões de vídeo alinhadas com z3.ps1 ---
 const VIDEO_EXTS = [
-    "mp4", "mov", "webm", "mkv", "avi", "mts", "m2ts", "3gp", "hevc"
+    "mp4", "mov", "webm", "mkv", "avi", "mts", "m2ts", "3gp", "hevc", "mpg", "mpeg", "m4v"
 ];
 
+let currentFilter = "all";
 
-/* match filtro (por extensão) */
 function matchFilterByName(name, filter = currentFilter) {
-    const ext = name.split('.').pop().toLowerCase();
-
-    if (filter === "all") return true;
-    if (filter === "photos") return !VIDEO_EXTS.includes(ext);
-    if (filter === "videos") return VIDEO_EXTS.includes(ext);
-
-    return true;
+  if (!name) return false; 
+  const ext = name.split('.').pop().toLowerCase();
+  if (filter === "all") return true;
+  if (filter === "photos") return !VIDEO_EXTS.includes(ext);
+  if (filter === "videos") return VIDEO_EXTS.includes(ext);
+  return true;
 }
 
 function ecoOrder(a, b) {
     const pa = parseInt(a.name.split(" - ")[0]) || 0;
     const pb = parseInt(b.name.split(" - ")[0]) || 0;
-
     if (pa !== pb) return pa - pb;
-
     return new Date(a.date) - new Date(b.date);
 }
-
-
 
 function buildFlat() {
     flatList = [];
     if (typeof manifest === 'undefined') return;
 
     Object.keys(manifest).sort((a, b) => a - b).forEach(y => {
-
         Object.keys(manifest[y]).sort(monthOrder).forEach(m => {
-
             let items = manifest[y][m].slice();
-
             if (m.toLowerCase() === "ecografias") {
                 items.sort(ecoOrder);
             } else {
                 items.sort((a, b) => new Date(a.date) - new Date(b.date));
             }
-
             items.forEach(it => {
                 flatList.push({
-   		year: y,
- 		month: m,
-  		name: it.name,
-  		date: it.date,
-  		src: it.path,
-  		thumb: it.thumb || it.path
+   		  year: y,
+ 		  month: m,
+  		  name: it.name,
+  		  date: it.date,
+  		  src: it.src || it.path || '',
+                  thumb: it.thumb || it.src || it.path || ''
 		});
-
             });
         });
     });
 }
 
-/* --------- Renderização com filtro inteligente (A1) --------- */
-/* Devolve lista de anos válidos conforme filtro */
+let indexMap = new Map();
+
+function buildIndexMap(){
+  indexMap.clear();
+  flatList.forEach((x,i)=>{
+    indexMap.set(`${x.year}|${x.month}|${x.name}`, i);
+  });
+}
+
 function getFilteredYears(){
   const out = [];
+  if (typeof manifest === 'undefined') return out;
   Object.keys(manifest).sort((a,b)=>a-b).forEach(y=>{
     const has = Object.keys(manifest[y]).some(m =>
       manifest[y][m].some(it => matchFilterByName(it.name, currentFilter))
@@ -704,16 +780,17 @@ function getFilteredYears(){
   return out;
 }
 
-
-/* Render anos */
 function renderYears(){
   yearsEl.innerHTML='';
+  if (typeof manifest === 'undefined') return;
   const validYears = getFilteredYears();
   const allYears   = Object.keys(manifest).sort((a,b)=>a-b);
 
   allYears.forEach(y=>{
     const btn=document.createElement('button');
     btn.textContent=y;
+
+    if(y === currentYear) btn.classList.add('active');
 
     const has = validYears.includes(y);
     if(!has){
@@ -728,21 +805,18 @@ function renderYears(){
         renderMonths(y);
       };
     }
-
     yearsEl.appendChild(btn);
   });
 
-  // se o ano atual deixar de existir ou ficar inválido → reset
   if(currentYear && !validYears.includes(currentYear)){
     currentYear=null; currentMonth=null;
     monthsEl.innerHTML=''; thumbsEl.innerHTML='';
   }
 }
 
-
-/* Meses filtrados por ano */
 function getFilteredMonths(y){
   const out = [];
+  if (typeof manifest === 'undefined' || !manifest[y]) return out;
   const allMonths = Object.keys(manifest[y] || {}).sort(monthOrder);
 
   allMonths.forEach(m=>{
@@ -752,76 +826,69 @@ function getFilteredMonths(y){
     if(has) out.push(m);
   });
 
-  // manter 'Ecografias' em primeiro
   const idxEco = out.findIndex(mm=>mm.toLowerCase()==='ecografias');
   if(idxEco>-1){ out.splice(idxEco,1); out.unshift('Ecografias'); }
 
   return out;
 }
 
-
-/* Render meses */
 function renderMonths(y){
-    monthsEl.innerHTML='';
+  monthsEl.innerHTML='';
+  if (typeof manifest === 'undefined' || !manifest[y]) return;
+  const validMonths = getFilteredMonths(y);
+  const allMonths   = Object.keys(manifest[y] || {}).sort(monthOrder);
 
-    // lista completa dos meses ordenados
-    let allMonths   = Object.keys(manifest[y] || {}).sort(monthOrder);
+  const idxEco = allMonths.findIndex(m=>m.toLowerCase()==='ecografias');
+  if(idxEco>-1){ allMonths.splice(idxEco,1); allMonths.unshift('Ecografias'); }
 
-    // se existir Ecografias → mete no topo
-    const idxEco = allMonths.findIndex(m => m.toLowerCase() === 'ecografias');
-    if (idxEco > -1) {
-        allMonths.splice(idxEco, 1);
-        allMonths.unshift('Ecografias');
+  allMonths.forEach(m=>{
+    const btn=document.createElement('button');
+    btn.textContent=m.charAt(0).toUpperCase() + m.slice(1);
+
+    if(m === currentMonth) btn.classList.add('active');
+
+    const has = validMonths.includes(m);
+    if(!has){
+      btn.disabled = true;
+      btn.style.opacity = "0.35";
+      btn.style.cursor = "not-allowed";
+    } else {
+      btn.onclick=()=>{
+        currentMonth=m;
+        monthsEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderThumbs(y,m);
+      };
     }
+    monthsEl.appendChild(btn);
+  });
 
-    const validMonths = getFilteredMonths(y);
-
-    allMonths.forEach(m => {
-        const btn = document.createElement('button');
-        btn.textContent = m.charAt(0).toUpperCase() + m.slice(1);
-
-        const has = validMonths.includes(m);
-
-        if (!has) {
-            btn.disabled = true;
-            btn.style.opacity = "0.35";
-            btn.style.cursor = "not-allowed";
-        } else {
-            btn.onclick = () => {
-                currentMonth = m;
-                monthsEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderThumbs(y, m);
-            };
-        }
-
-        monthsEl.appendChild(btn);
-    });
-
-    if(currentMonth && !validMonths.includes(currentMonth)){
-        currentMonth=null;
-        thumbsEl.innerHTML='';
-    }
+  if(currentMonth && !validMonths.includes(currentMonth)){
+    currentMonth=null; thumbsEl.innerHTML='';
+  }
 }
 
-/* --------- Filtros UI --------- */
-let currentFilter="all";
 function setFilter(f){
   currentFilter=f;
   [fltAll,fltPhotos,fltVideos].forEach(b=>b.classList.remove('active'));
   ({all:fltAll,photos:fltPhotos,videos:fltVideos}[f]).classList.add('active');
 
-  // Ao mudar filtro: re-renderiza anos e meses conforme disponibilidade
   renderYears();
   if(currentYear){ renderMonths(currentYear); }
   if(currentYear && currentMonth){ renderThumbs(currentYear,currentMonth); }
+
+  if(flatList.length > 0 && typeof curIdx === 'number' && flatList[curIdx]){
+    show(curIdx);
+  }
 }
-fltAll.onclick   = ()=>setFilter("all");
-fltPhotos.onclick= ()=>setFilter("photos");
-fltVideos.onclick= ()=>setFilter("videos");
+
+fltAll.onclick   = () => setFilter("all");
+fltPhotos.onclick = () => setFilter("photos");
+fltVideos.onclick = () => setFilter("videos");
 
 function renderThumbs(y, m) {
     thumbsEl.innerHTML = "";
+    if (typeof manifest === 'undefined' || !manifest[y] || !manifest[y][m]) return;
 
     let list = manifest[y][m].slice().filter(it =>
         matchFilterByName(it.name, currentFilter)
@@ -829,7 +896,6 @@ function renderThumbs(y, m) {
 
     if (m.toLowerCase() === "ecografias") {
         list.sort(ecoOrder);
-
         let group = "";
 
         list.forEach(it => {
@@ -843,7 +909,6 @@ function renderThumbs(y, m) {
             }
             addThumbCard(y, m, it);
         });
-
         return;
     }
 
@@ -861,12 +926,10 @@ function renderThumbs(y, m) {
             }
             current = it.date;
         }
-
         addThumbCard(y, m, it);
         first = false;
     });
 }
-
 
 function addThumbCard(y, m, it) {
     const card = document.createElement('div');
@@ -903,20 +966,13 @@ function addThumbCard(y, m, it) {
     card.appendChild(d);
 
     card.onclick = () => {
-        const idx = flatList.findIndex(x =>
-            x.year === y &&
-            x.month === m &&
-            x.name === it.name
-        );
-        if (idx > -1) show(idx);
+      const idx = indexMap.get(`${y}|${m}|${it.name}`);
+      if (idx !== undefined) show(idx);
     };
 
     thumbsEl.appendChild(card);
 }
 
-
-
-/* Lista do mês atual respeitando o filtro (para slideshow/next/prev) */
 function monthListFiltered(y,m){
   return flatList.filter(x =>
       x.year === y &&
@@ -925,23 +981,16 @@ function monthListFiltered(y,m){
   );
 }
 
-/* --------- Viewer --------- */
 function show(i){
   if(!flatList.length) return;
   if(i<0) i=flatList.length-1; if(i>=flatList.length) i=0; curIdx=i;
   const it=flatList[i];
 
-  // Se o item não passa no filtro atual, tenta avançar para o próximo válido do mês
   if(!matchFilterByName(it.name)){
-    const ml = monthListFiltered(it.year,it.month);
-    if(ml.length){
-      const idx = flatList.findIndex(x=>x.year===ml[0].year && x.month===ml[0].month && x.name===ml[0].name);
-      if(idx>-1){ curIdx=idx; return show(idx); }
-    }
+    nextGlobal();
     return;
   }
 
-  // Ajusta ano/mês selecionados na UI (se vier de "restauro")
   if(currentYear!==it.year){ currentYear=it.year; renderYears(); }
   if(currentMonth!==it.month){ 
     currentMonth=it.month; 
@@ -954,14 +1003,19 @@ function show(i){
   const ext=it.name.split('.').pop().toLowerCase();
   const isVideo = VIDEO_EXTS.includes(ext);
   const el = isVideo ? document.createElement('video') : document.createElement('img');
-  el.src = it.src.split('/').map(encodeURIComponent).join('/');
+  el.src = encodeURI(it.src);
   if(el.tagName==='VIDEO'){
     const wasRunning=!!timer; if(wasRunning) stopSS();
     el.controls=true; el.playsInline=true; el.preload="metadata"; el.muted=false; el.autoplay=true;
-    el.onended=()=>{ if(wasRunning) startSS(); };
+    el.onended=()=>{
+      if(wasRunning){
+        setTimeout(()=>startSS(), 300);
+      }
+    };
   }
   el.onload=()=>el.classList.add('visible');
   el.onloadeddata=()=>el.classList.add('visible');
+  if(!isVideo){ el.style.cursor='zoom-in'; el.onclick=()=>openZoom(it.src); }
   stage.appendChild(el);
 
   metaEl.style.display='block'; metaEl.textContent=fmtDate(it.date);
@@ -972,21 +1026,19 @@ function show(i){
   counterEl.style.display='block'; counterEl.textContent = currentMonthList.length ? `${pos}/${currentMonthList.length}` : '';
 
   [...document.querySelectorAll('.thumb')].forEach(t=>t.classList.remove('active'));
-const tsel=[...document.querySelectorAll('.thumb img,.thumb video')].find(e=>decodeURIComponent(e.src).endsWith(`/${it.name}`));
-if(tsel) {
-  const parent = tsel.parentElement;
-  parent.classList.add('active');
-  // Faz scroll suave até à miniatura visível
-  parent.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-}
+  const tsel = [...document.querySelectorAll('.thumb img,.thumb video')]
+    .find(e => e.getAttribute('src')?.includes(it.name));
 
+  if(tsel) {
+    const parent = tsel.parentElement;
+    parent.classList.add('active');
+    parent.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
 
-  // Preload vizinhos (do mês filtrado)
   const preloadByItem=(item)=>{
     if(!item) return;
     const ext=item.name.split('.').pop().toLowerCase();
-    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src = encodeURI(item.src);
-; v.preload="metadata"; }
+    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src = encodeURI(item.src); v.preload="metadata"; }
     else { const img=new Image(); img.src=encodeURI(item.src); }
   };
   if(currentMonthList.length){
@@ -995,15 +1047,13 @@ if(tsel) {
     preloadByItem(currentMonthList[(pIdx-1+currentMonthList.length)%currentMonthList.length]);
   }
 
-  // Guardar último estado
   localStorage.setItem('album_last_year', it.year);
   localStorage.setItem('album_last_month', it.month);
   localStorage.setItem('album_last_name', it.name);
 
   resetBar();
+  checkOnThisDay();
 }
-
-/* next/prev respeitam filtro E mês atual */
 
 function nextGlobal(){
   const filtered = flatList.filter(x => matchFilterByName(x.name, currentFilter));
@@ -1011,8 +1061,8 @@ function nextGlobal(){
   const cur = flatList[curIdx];
   const pos = filtered.findIndex(x => x.name===cur?.name && x.year===cur?.year && x.month===cur?.month);
   const nxt = filtered[(pos+1) % filtered.length];
-  const idx = flatList.findIndex(x=>x.year===nxt.year&&x.month===nxt.month&&x.name===nxt.name);
-  if(idx>-1) show(idx);
+  const idx = indexMap.get(`${nxt.year}|${nxt.month}|${nxt.name}`);
+  if(idx !== undefined) show(idx);
 }
 
 function next(){
@@ -1021,8 +1071,8 @@ function next(){
   if(!list.length) return;
   const pos = list.findIndex(x=>x.name===it.name);
   const nxt = list[(pos+1)%list.length];
-  const idx = flatList.findIndex(x=>x.year===nxt.year&&x.month===nxt.month&&x.name===nxt.name);
-  if(idx>-1) show(idx);
+  const idx = indexMap.get(`${nxt.year}|${nxt.month}|${nxt.name}`);
+  if(idx !== undefined) show(idx);
 }
 function prev(){
   const it = flatList[curIdx]; if(!it) return;
@@ -1030,8 +1080,8 @@ function prev(){
   if(!list.length) return;
   const pos = list.findIndex(x=>x.name===it.name);
   const prv = list[(pos-1+list.length)%list.length];
-  const idx = flatList.findIndex(x=>x.year===prv.year&&x.month===prv.month&&x.name===prv.name);
-  if(idx>-1) show(idx);
+  const idx = indexMap.get(`${prv.year}|${prv.month}|${prv.name}`);
+  if(idx !== undefined) show(idx);
 }
 
 function resetBar(){ bar.style.transition='none'; bar.style.width='0%'; void bar.offsetWidth; if(timer){ bar.style.transition=`width ${slideMs}ms linear`; setTimeout(()=>bar.style.width='100%',20); } }
@@ -1052,7 +1102,6 @@ function stopSS(){
 function toggleSS(){ timer?stopSS():startSS(); }
 document.getElementById('slideshow').onclick=toggleSS;
 
-/* Velocidade dinâmica (normal e fullscreen) */
 function applyNewSpeed(){
   slideMs = document.fullscreenElement ? (+fsSpeed.value||4000) : (+speedSel.value||4000);
   if(timer){ clearInterval(timer); timer=setInterval(()=>{ nextGlobal(); resetBar(); }, slideMs); }
@@ -1060,7 +1109,6 @@ function applyNewSpeed(){
 }
 speedSel.onchange=applyNewSpeed; fsSpeed.onchange=applyNewSpeed;
 
-/* Fullscreen + HUD que aparece quando mexe o rato */
 document.getElementById('fullscreen').onclick=()=>{
   if(!document.fullscreenElement) document.documentElement.requestFullscreen();
   else document.exitFullscreen();
@@ -1073,14 +1121,13 @@ function showHud(){
 }
 document.addEventListener('fullscreenchange',()=>{
   const on = !!document.fullscreenElement;
-  fsHud.style.display = on ? 'flex' : 'none';
+  fsHud.classList.toggle('show', on);
   if(on) showHud();
 });
 document.addEventListener('mousemove',()=>{ document.body.classList.add('show-arrows'); showHud(); });
 document.getElementById('fsExit').onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); };
 fsToggle.onclick=toggleSS;
 
-/* Navegação teclas + setas visíveis */
 document.getElementById('arrowLeft').onclick=prev;
 document.getElementById('arrowRight').onclick=next;
 let arrowTimer; 
@@ -1093,9 +1140,164 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight') next();
   else if(e.key==='ArrowLeft') prev();
   else if(e.key===' '){ e.preventDefault(); toggleSS(); }
+  else if(e.key==='Escape'){
+    closeZoom();
+    closeOnThisDay();
+  }
   else if(e.key.toLowerCase()==='f'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
   if(['ArrowLeft','ArrowRight'].includes(e.key)){ document.body.classList.add('show-arrows'); showHud(); }
 });
+
+function parseDateSafe(dateStr){
+  if(!dateStr || typeof dateStr !== "string") return null;
+  let m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m) return { y:+m[1], m:+m[2], d:+m[3] };
+  m = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m) return { y:+m[3], m:+m[2], d:+m[1] };
+  const d = new Date(dateStr);
+  if(isNaN(d)) return null;
+  return { y: d.getFullYear(), m: d.getMonth()+1, d: d.getDate() };
+}
+
+/* ===== Neste dia ===== */
+function checkOnThisDay(){
+  const T = STR[Lang] || STR.pt;
+  const current = flatList[curIdx];
+
+  if(!current){
+    document.getElementById('onThisDayBanner').style.display='none';
+    return;
+  }
+
+  const currentDate = parseDateSafe(current.date);
+  if(!currentDate){
+    document.getElementById('onThisDayBanner').style.display='none';
+    return;
+  }
+
+  const matches = flatList.filter(x => {
+    const dt = parseDateSafe(x.date);
+    if(!dt) return false;
+    return (dt.d === currentDate.d && dt.m === currentDate.m && dt.y !== currentDate.y);
+  });
+
+  otdMatches = matches;
+  const banner = document.getElementById('onThisDayBanner');
+
+  if(!matches.length){
+    banner.style.display='none';
+    return;
+  }
+
+  const todayText = new Date(currentDate.y, currentDate.m - 1, currentDate.d).toLocaleDateString(
+    Lang === 'pt' ? 'pt-PT' : 'en-GB', { day:'numeric', month:'long' }
+  );
+
+  const yearCount = [...new Set(matches.map(x=>x.year))].length;
+
+  if(Lang === 'pt'){
+    const isPlural = matches.length !== 1;
+    document.getElementById('onThisDayText').textContent = `📅 ${T.memories || "Memórias de"} ${todayText}`;
+    document.getElementById('onThisDayCount').textContent = `${matches.length} ${isPlural ? 'momentos' : 'momento'} em ${yearCount} ano${yearCount!==1?'s':''}`;
+  }else{
+    document.getElementById('onThisDayText').textContent = `📅 Memories from ${todayText} in other years`;
+    document.getElementById('onThisDayCount').textContent = `${matches.length} moment${matches.length!==1?'s':''} in ${yearCount} year${yearCount!==1?'s':''}`;
+  }
+  banner.style.display='flex';
+}
+
+function openOnThisDay(){
+  const matches = otdMatches;
+  if(!matches.length) return;
+
+  const content = document.getElementById('otdContent');
+  content.innerHTML = '';
+  const groups = {};
+
+  matches.forEach(item=>{
+      if(!groups[item.year]) groups[item.year] = [];
+      groups[item.year].push(item);
+  });
+
+  Object.keys(groups).sort().forEach(year=>{
+      const section = document.createElement('div');
+      section.className = 'otdYear';
+      section.innerHTML = `<h2>${year}</h2><div class="otdGrid"></div>`;
+
+      const grid = section.querySelector('.otdGrid');
+
+      groups[year].forEach(it=>{
+          const card = document.createElement('div');
+          card.className = 'otdCard';
+
+          const ext = it.name.split('.').pop().toLowerCase();
+          const isVideo = VIDEO_EXTS.includes(ext);
+          const media = document.createElement(isVideo ? 'video' : 'img');
+
+          const src = it.thumb || it.src || it.path || '';
+          media.src = src.split('/').map(encodeURIComponent).join('/');
+
+          if(isVideo){
+            media.muted = true;
+            media.preload = 'metadata';
+          }
+
+          const date = document.createElement('div');
+          date.className = 'otdDate';
+          const gotoText = Lang === 'pt'
+            ? (isVideo ? '📍 Ir para este vídeo' : '📍 Ir para esta foto')
+            : (isVideo ? '📍 Go to this video' : '📍 Go to this photo');
+
+          date.innerHTML = `${fmtDate(it.date)}<br><span style="opacity:.7">${gotoText}</span>`;
+          card.style.position = 'relative';
+          card.appendChild(media);
+
+          if(isVideo){
+            const icon = document.createElement('div');
+            icon.textContent = '🎬';
+            icon.style.cssText = `position:absolute;left:8px;top:8px;background:rgba(0,0,0,.5);border-radius:4px;padding:2px 5px;font-size:16px;pointer-events:none;`;
+            card.appendChild(icon);
+          }
+
+          card.appendChild(date);
+          card.onclick = () => {
+            closeOnThisDay();
+            currentYear = it.year;
+            currentMonth = it.month;
+            renderYears();
+            renderMonths(it.year);
+            const idx = indexMap.get(`${it.year}|${it.month}|${it.name}`);
+            if(idx !== undefined) show(idx);
+          };
+          grid.appendChild(card);
+      });
+      content.appendChild(section);
+  });
+
+  const todayText = new Date().toLocaleDateString(Lang === 'pt' ? 'pt-PT' : 'en-GB', { day:'numeric', month:'long' });
+  document.getElementById('otdTitle').textContent = Lang === 'pt' ? `📅 ${todayText} noutros anos` : `📅 ${todayText} in previous years`;
+
+  const current = flatList[curIdx];
+  if(current){
+    const dt = parseDateSafe(current.date);
+    const dateText = new Date(dt.y, dt.m - 1, dt.d).toLocaleDateString(Lang === 'pt' ? 'pt-PT' : 'en-GB', { day:'numeric', month:'long' });
+    document.getElementById('otdTitle').textContent = Lang === 'pt' ? `📅 ${dateText} noutros anos` : `📅 ${dateText} in previous years`;
+  }
+
+  const overlay = document.getElementById('otdOverlay');
+  overlay.style.display = 'flex';
+}
+
+window.openOnThisDay = openOnThisDay;
+
+/* ===== Zoom ===== */
+function openZoom(src){
+  document.getElementById('zoomImg').src=src.split('/').map(encodeURIComponent).join('/');
+  document.getElementById('zoomOverlay').style.display='flex';
+}
+function closeOnThisDay(){ document.getElementById('otdOverlay').style.display='none'; }
+window.closeOnThisDay = closeOnThisDay;
+function closeZoom(){ document.getElementById('zoomOverlay').style.display='none'; }
 
 /* ===== Inicialização ===== */
 function init(){
@@ -1103,11 +1305,10 @@ function init(){
   const proj = (typeof CONFIG!=='undefined' && CONFIG.projectName) ? CONFIG.projectName : 'Offline Photo Album';
   document.getElementById('headline').textContent = name;
   document.getElementById('subtitle').textContent = proj;
-// Mostra o título completo como tooltip ao passar o rato
-document.getElementById('headline').title = name;
-
+  document.getElementById('headline').title = name;
 
   applyTheme(localStorage.getItem('album_theme') || (CONFIG&&CONFIG.theme) || 'dark');
+  themeSel.value = localStorage.getItem('album_theme') || 'dark';
   themeSel.onchange=e=>{ applyTheme(e.target.value); localStorage.setItem('album_theme', e.target.value); };
 
   applyGradient(localStorage.getItem('album_gradient') || 'pink');
@@ -1118,9 +1319,9 @@ document.getElementById('headline').title = name;
     localStorage.setItem('album_lang',Lang);
     langToggle.textContent=(Lang==='pt')?'🇵🇹 / 🇬🇧':'🇬🇧 / 🇵🇹'; 
     langToggle.title=(Lang==='pt')?'Mudar para inglês':'Switch to Portuguese'; 
-    setTexts(); 
+    setTexts();
+    checkOnThisDay();
 
-    // Re-render para aplicar traduções e manter filtro
     renderYears();
     if(currentYear) renderMonths(currentYear);
     if(currentYear && currentMonth) renderThumbs(currentYear,currentMonth);
@@ -1135,31 +1336,31 @@ document.getElementById('headline').title = name;
   langToggle.title=(Lang==='pt')?'Mudar para inglês':'Switch to Portuguese';
 
   setTexts();
+  checkOnThisDay();
 
   if(typeof manifest==='undefined'){ stage.innerHTML='<div style="color:#bbb">Erro: manifest não encontrado.</div>'; return; }
 
-  buildFlat(); 
+  buildFlat();
+  buildIndexMap();
   renderYears();
 
-  // Restaurar último estado
   const ly=localStorage.getItem('album_last_year');
   const lm=localStorage.getItem('album_last_month');
   const ln=localStorage.getItem('album_last_name');
   if(ly && lm && manifest[ly] && manifest[ly][lm]){
-    // garantir que ano/mês existem com filtro ATUAL
     currentFilter="all";
     [fltAll,fltPhotos,fltVideos].forEach(b=>b.classList.remove('active')); fltAll.classList.add('active');
     renderYears();
     [...yearsEl.querySelectorAll("button")].find(b=>b.textContent==ly)?.click();
     setTimeout(()=>{
       [...monthsEl.querySelectorAll("button")].find(b=>b.textContent.toLowerCase()==lm.toLowerCase())?.click();
-      setTimeout(()=>{ const idx=flatList.findIndex(x=>x.name==ln && x.year==ly && x.month==lm); if(idx>=0) show(idx); },80);
+      setTimeout(()=>{ const idx = indexMap.get(`${ly}|${lm}|${ln}`);
+      if(typeof idx === "number") show(idx); },80);
     },80);
   }
 }
 init();
 
-// Expor no global
 window.renderYears=renderYears; window.buildFlat=buildFlat; window.init=init;
 </script>
 </body>
