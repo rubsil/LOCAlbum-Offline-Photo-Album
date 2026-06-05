@@ -655,6 +655,54 @@ $photoDate = "$yearFolder-$monthNum-01"
     }
 }
 
+# =================================================
+# Processar pasta sem data (Fotos Diversas)
+# =================================================
+$noDatePT = "__FICHEIROS_SEM_DATA - VERIFICAR_MANUALMENTE"
+$noDateEN = "__FILES_WITHOUT_DATE - CHECK_MANUALLY"
+$noDateFullPath = $null
+
+foreach ($ndName in @($noDatePT, $noDateEN)) {
+    $p = Join-Path $base $ndName
+    if (Test-Path $p) { $noDateFullPath = $p; break }
+}
+
+if ($noDateFullPath) {
+    $specialYear  = "9999"
+    $specialMonth = if ($cfg['language'] -eq 'en') { "Others" } else { "Outros" }
+    $normSpecial  = Normalize-Name $specialMonth
+
+    if (-not $manifest.ContainsKey($specialYear)) {
+        $manifest[$specialYear] = @{}
+    }
+    $manifest[$specialYear][$specialMonth] = [System.Collections.Generic.List[object]]::new()
+
+    $noDateFolderLeaf = Split-Path $noDateFullPath -Leaf
+
+    Get-ChildItem -Path $noDateFullPath -File | Sort-Object Name | ForEach-Object {
+        $file = $_
+        $name = $file.Name
+        $ext  = $file.Extension.ToLower()
+
+        $thumbRel = $null
+        if ($ext -notin @(".mp4",".mov",".webm",".mkv",".avi",".mts",".m2ts",".3gp",".hevc")) {
+            $thumbDir  = Join-Path $thumbRoot "$specialYear\$normSpecial"
+            $thumbName = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
+            $thumbFull = Join-Path $thumbDir $thumbName
+            $thumbRel  = "Album/Thumbnails/$specialYear/$normSpecial/$thumbName"
+            New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $file.LastWriteTimeUtc.Ticks
+        }
+
+        $manifest[$specialYear][$specialMonth].Add([pscustomobject]@{
+            name  = $name
+            path  = "Album/Fotos/$noDateFolderLeaf/$name"
+            thumb = $thumbRel
+            date  = ""
+        })
+    }
+    Write-Host "  [SEM DATA] $($manifest[$specialYear][$specialMonth].Count) ficheiro(s) em '$specialMonth'"
+}
+
 Write-Progress -Activity $msg_processing -Completed
 
 # =================================================
