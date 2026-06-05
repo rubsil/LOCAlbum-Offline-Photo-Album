@@ -795,6 +795,7 @@ function monthOrder(a, b) {
 
 /* Formatação de datas */
 function fmtDate(iso){
+  if(!iso) return Lang === 'pt' ? 'Sem data' : 'No date';
   const p = iso.split('-');
   const d = new Date(p[0], p[1]-1, p[2]);
   if(isNaN(d)) return iso;
@@ -923,7 +924,8 @@ function renderYears(){
 
   allYears.forEach(y=>{
     const btn=document.createElement('button');
-    btn.textContent=y;
+    btn.textContent = y === '9999' ? (Lang === 'pt' ? '📁 Outros' : '📁 Various') : y;
+    btn.dataset.year = y;
 
     if(y === currentYear) btn.classList.add('active');
 
@@ -1229,7 +1231,8 @@ function show(i){
   if(!isVideo){ el.style.cursor='zoom-in'; el.onclick=()=>openZoom(it.src); }
   stage.appendChild(el);
 
-  metaEl.style.display='block'; metaEl.textContent=fmtDate(it.date);
+  const dateLabel = it.date ? fmtDate(it.date) : (Lang === 'pt' ? 'Sem data' : 'No date');
+  metaEl.style.display='block'; metaEl.textContent=dateLabel;
   const a=ageStr(it.date); ageEl.style.display=a?'block':'none'; ageEl.textContent=a?('🍼 '+a):'';
 
   const currentMonthList = monthListFiltered(it.year,it.month);
