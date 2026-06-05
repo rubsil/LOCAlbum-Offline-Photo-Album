@@ -8,15 +8,6 @@ setlocal EnableDelayedExpansion EnableExtensions
 ::  Autor: Rúben Silva
 :: =====================================================
 
-:: --- Verificar privilégios de administrador ---
-net session >nul 2>&1
-if %errorLevel% NEQ 0 (
-    echo.
-    echo ⚠️  A executar novamente como Administrador...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b
-)
-
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 set "INI=%ROOT%\config.ini"
@@ -238,7 +229,7 @@ if not exist "%ROOT%\z3.ps1" (
   pause
   if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
-"%PWSH%" -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '%ROOT%\z3.ps1' -lang '%LANG%'"
+"%PWSH%" -ExecutionPolicy Bypass -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '%ROOT%\z3.ps1' -lang '%LANG%'"
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 
 :: =====================================================
@@ -287,7 +278,7 @@ if /i "!UPDATE_MODE!"=="B" (
   )
 )
 
-"%PWSH%" -ExecutionPolicy Bypass -File "%ROOT%\z1.ps1"
+"%PWSH%" -ExecutionPolicy Bypass -NoProfile -File "%ROOT%\z1.ps1"
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 
 :: =====================================================
