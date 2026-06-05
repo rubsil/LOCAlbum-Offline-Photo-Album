@@ -9,14 +9,6 @@ param(
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
-# --- Auto-elevate to Administrator if needed ---
-$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "[INFO] Reexecutando como Administrador..."
-    Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`" -lang `"$lang`""
-    exit
-}
-
 # --- Garantir modo STA (necessário em Windows 11 para System.Drawing e Forms) ---
 if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
     Write-Host "[INFO] Reiniciando o script em modo STA (necessario para W11)..."
@@ -24,8 +16,12 @@ if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
     exit
 }
 
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
+try {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+} catch {
+    Write-Host "[AVISO] Alguns componentes visuais nao puderam ser carregados." -ForegroundColor Yellow
+}
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $iniPath = Join-Path $root "config.ini"
