@@ -656,7 +656,7 @@ $photoDate = "$yearFolder-$monthNum-01"
 }
 
 # =================================================
-# Processar pasta sem data (Fotos Diversas)
+# Processar pasta sem data (Fotos Diversas com Divisão Automática)
 # =================================================
 $noDatePT = "__FICHEIROS_SEM_DATA - VERIFICAR_MANUALMENTE"
 $noDateEN = "__FILES_WITHOUT_DATE - CHECK_MANUALLY"
@@ -668,19 +668,44 @@ foreach ($ndName in @($noDatePT, $noDateEN)) {
 }
 
 if ($noDateFullPath) {
-    $specialYear  = "9999"
-    $specialMonth = if ($cfg['language'] -eq 'en') { "Others" } else { "Outros" }
-    $normSpecial  = Normalize-Name $specialMonth
-
+    $specialYear = "9999"
     if (-not $manifest.ContainsKey($specialYear)) {
         $manifest[$specialYear] = @{}
     }
-    $manifest[$specialYear][$specialMonth] = [System.Collections.Generic.List[object]]::new()
 
+    # 1. Obter todos os ficheiros da pasta sem data
+    $noDateFiles = Get-ChildItem -Path $noDateFullPath -File | Sort-Object Name
+    
+    # --- CONFIGURAÇÃO DO LIMITE ---
+    $photoLimit  = 500  # <--- Altera aqui o limite de fotos por bloco (500 é o ideal para performance)
+    # ------------------------------
+
+    $chunkIndex  = 1
+    $fileCounter = 0
+
+    # Determinar o nome base do idioma para os blocos
+    $baseMonthName = if ($cfg['language'] -eq 'en') { "Part" } else { "Parte" }
+    
+    # Formata como "Parte 01" (o zero à esquerda garante que a ordenação no ecrã fica correta: 01, 02... em vez de 1, 10, 2)
+    $chunkStr     = "{0:D2}" -f $chunkIndex
+    $specialMonth = "$baseMonthName $chunkStr"
+    $normSpecial  = Normalize-Name $specialMonth
+
+    $manifest[$specialYear][$specialMonth] = [System.Collections.Generic.List[object]]::new()
     $noDateFolderLeaf = Split-Path $noDateFullPath -Leaf
 
-    Get-ChildItem -Path $noDateFullPath -File | Sort-Object Name | ForEach-Object {
-        $file = $_
+    foreach ($file in $noDateFiles) {
+        
+        # 2. Se atingir o limite de fotos, fecha este bloco e abre a "Parte" seguinte
+        if ($fileCounter -ge $photoLimit) {
+            $chunkIndex++
+            $fileCounter  = 0
+            $chunkStr     = "{0:D2}" -f $chunkIndex
+            $specialMonth = "$baseMonthName $chunkStr"
+            $normSpecial  = Normalize-Name $specialMonth
+            $manifest[$specialYear][$specialMonth] = [System.Collections.Generic.List[object]]::new()
+        }
+
         $name = $file.Name
         $ext  = $file.Extension.ToLower()
 
@@ -699,11 +724,11 @@ if ($noDateFullPath) {
             thumb = $thumbRel
             date  = ""
         })
-    }
-    Write-Host "  [SEM DATA] $($manifest[$specialYear][$specialMonth].Count) ficheiro(s) em '$specialMonth'"
-}
 
-Write-Progress -Activity $msg_processing -Completed
+        $fileCounter++
+    }
+    Write-Host "  [SEM DATA] Dividido automaticamente em $chunkIndex parte(s) dentro de '$specialYear'"
+}
 
 # =================================================
 # Finalizar processamento → guardar cache
