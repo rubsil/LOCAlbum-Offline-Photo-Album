@@ -697,6 +697,11 @@ const fltPhotos=document.getElementById('fltPhotos');
 const fltVideos=document.getElementById('fltVideos');
 
 let flatList = [], curIdx = 0, timer = null, slideMs = +speedSel.value;
+let dateMatchMap = new Map();
+let filteredCache = null;
+let monthFilterCache = new Map();
+let thumbMap = new Map();
+let activeThumbEl = null;
 let currentYear=null, currentMonth=null;
 let otdMatches = [];
 let Lang = localStorage.getItem('album_lang') || (typeof CONFIG!=='undefined' ? (CONFIG.language||'pt') : 'pt');
@@ -904,6 +909,23 @@ function buildIndexMap(){
   });
 }
 
+function buildDateMatchMap(){
+  dateMatchMap.clear();
+  flatList.forEach((x,i)=>{
+    const dt = parseDateSafe(x.date);
+    if(!dt) return;
+    const key = `${String(dt.m).padStart(2,'0')}-${String(dt.d).padStart(2,'0')}`;
+    if(!dateMatchMap.has(key)) dateMatchMap.set(key,[]);
+    dateMatchMap.get(key).push(i);
+  });
+}
+
+function getFilteredFlat(){
+  if(filteredCache) return filteredCache;
+  filteredCache = flatList.filter(x => matchFilterByName(x.name, currentFilter));
+  return filteredCache;
+}
+
 function getFilteredYears(){
   const out = [];
   if (typeof manifest === 'undefined') return out;
@@ -1007,6 +1029,8 @@ function renderMonths(y){
 
 function setFilter(f){
   currentFilter = f;
+  filteredCache = null;
+  monthFilterCache.clear();
   [fltAll, fltPhotos, fltVideos].forEach(b => b.classList.remove('active'));
   ({ all: fltAll, photos: fltPhotos, videos: fltVideos }[f]).classList.add('active');
 
@@ -1098,6 +1122,8 @@ fltVideos.onclick = () => setFilter("videos");
 
 function renderThumbs(y, m) {
     thumbsEl.innerHTML = "";
+    thumbMap.clear();
+    activeThumbEl = null;
     if (typeof manifest === 'undefined' || !manifest[y] || !manifest[y][m]) return;
 
     let list = manifest[y][m].slice().filter(it =>
@@ -1145,21 +1171,23 @@ function addThumbCard(y, m, it) {
     const card = document.createElement('div');
     card.className = 'thumb';
 
-    const ext = it.name.split('.').pop().toLowerCase();
-    const isVideo = VIDEO_EXTS.includes(ext);
+const ext = it.name.split('.').pop().toLowerCase();
+  const isVideo = VIDEO_EXTS.includes(ext);
+  const hasThumb = !!it.thumb;
 
-    const el = isVideo
-        ? document.createElement('video')
-        : document.createElement('img');
+  // Vídeo com thumbnail gerada → usa <img> (mais leve, sem carregamento do vídeo)
+  const el = (isVideo && !hasThumb)
+    ? document.createElement('video')
+    : document.createElement('img');
 
-    el.src = (it.thumb || it.path).split('/').map(encodeURIComponent).join('/');
-
-    if (el.tagName === 'IMG') {
-        el.loading = 'lazy';
-        el.decoding = 'async';
-    } else if (el.tagName === 'VIDEO') {
-        el.muted = true;
-    }
+  el.src = (it.thumb || it.path).split('/').map(encodeURIComponent).join('/');
+  if (el.tagName === 'IMG') {
+    el.loading = 'lazy';
+    el.decoding = 'async';
+  } else if (el.tagName === 'VIDEO') {
+    el.muted = true;
+    el.preload = 'none';
+  }
 
     card.appendChild(el);
 
@@ -1175,20 +1203,23 @@ function addThumbCard(y, m, it) {
     d.textContent = fmtDate(it.date);
     card.appendChild(d);
 
-    card.onclick = () => {
+card.onclick = () => {
       const idx = indexMap.get(`${y}|${m}|${it.name}`);
       if (idx !== undefined) show(idx);
     };
 
+    thumbMap.set(`${y}|${m}|${it.name}`, card);
     thumbsEl.appendChild(card);
 }
 
 function monthListFiltered(y,m){
-  return flatList.filter(x =>
-      x.year === y &&
-      x.month === m &&
-      matchFilterByName(x.name, currentFilter)
+  const key = `${y}|${m}|${currentFilter}`;
+  if(monthFilterCache.has(key)) return monthFilterCache.get(key);
+  const result = flatList.filter(x =>
+    x.year === y && x.month === m && matchFilterByName(x.name, currentFilter)
   );
+  monthFilterCache.set(key, result);
+  return result;
 }
 
 function show(i){
@@ -1239,14 +1270,12 @@ function show(i){
   const pos=currentMonthList.findIndex(x=>x.name===it.name)+1;
   counterEl.style.display='block'; counterEl.textContent = currentMonthList.length ? `${pos}/${currentMonthList.length}` : '';
 
-  [...document.querySelectorAll('.thumb')].forEach(t=>t.classList.remove('active'));
-  const tsel = [...document.querySelectorAll('.thumb img,.thumb video')]
-    .find(e => e.getAttribute('src')?.includes(it.name));
-
-  if(tsel) {
-    const parent = tsel.parentElement;
-    parent.classList.add('active');
-    parent.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+if(activeThumbEl) activeThumbEl.classList.remove('active');
+  const thumbCard = thumbMap.get(`${it.year}|${it.month}|${it.name}`);
+  if(thumbCard) {
+    thumbCard.classList.add('active');
+    activeThumbEl = thumbCard;
+    thumbCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }
 
   const preloadByItem=(item)=>{
@@ -1270,7 +1299,7 @@ function show(i){
 }
 
 function nextGlobal(){
-  const filtered = flatList.filter(x => matchFilterByName(x.name, currentFilter));
+  const filtered = getFilteredFlat();
   if(!filtered.length) return;
   const cur = flatList[curIdx];
   const pos = filtered.findIndex(x => x.name===cur?.name && x.year===cur?.year && x.month===cur?.month);
@@ -1389,11 +1418,10 @@ function checkOnThisDay(){
     return;
   }
 
-  const matches = flatList.filter(x => {
-    const dt = parseDateSafe(x.date);
-    if(!dt) return false;
-    return (dt.d === currentDate.d && dt.m === currentDate.m && dt.y !== currentDate.y);
-  });
+const dayKey = `${String(currentDate.m).padStart(2,'0')}-${String(currentDate.d).padStart(2,'0')}`;
+  const matches = (dateMatchMap.get(dayKey) || [])
+    .map(i => flatList[i])
+    .filter(x => { const dt = parseDateSafe(x.date); return dt && dt.y !== currentDate.y; });
 
   otdMatches = matches;
   const banner = document.getElementById('onThisDayBanner');
@@ -1446,15 +1474,18 @@ function openOnThisDay(){
 
           const ext = it.name.split('.').pop().toLowerCase();
           const isVideo = VIDEO_EXTS.includes(ext);
-          const media = document.createElement(isVideo ? 'video' : 'img');
+const hasThumb = !!it.thumb;
+      const media = document.createElement((isVideo && !hasThumb) ? 'video' : 'img');
 
-          const src = it.thumb || it.src || it.path || '';
-          media.src = src.split('/').map(encodeURIComponent).join('/');
+      const src = it.thumb || it.src || it.path || '';
+      media.src = src.split('/').map(encodeURIComponent).join('/');
 
-          if(isVideo){
-            media.muted = true;
-            media.preload = 'metadata';
-          }
+      if(media.tagName === 'VIDEO'){
+        media.muted = true;
+        media.preload = 'none';
+      } else {
+        media.loading = 'lazy';
+      }
 
           const date = document.createElement('div');
           date.className = 'otdDate';
@@ -1551,8 +1582,9 @@ function init(){
 
   if(typeof manifest==='undefined'){ stage.innerHTML='<div style="color:#bbb">Erro: manifest não encontrado.</div>'; return; }
 
-  buildFlat();
+buildFlat();
   buildIndexMap();
+  buildDateMatchMap();
   renderYears();
 
   const ly=localStorage.getItem('album_last_year');
