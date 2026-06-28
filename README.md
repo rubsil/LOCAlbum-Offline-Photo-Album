@@ -160,14 +160,12 @@ leaving only the **`LOCALBUM - Manager.bat`** visible — clean, simple, and rea
 ## 🛠️ Ferramentas Auxiliares / Helper Tools
 
 ### 🇵🇹 Português
-* **`exiftool.exe` (Opcional)** — Utilitário desenvolvido por Phil Harvey. Serve para melhorar e otimizar a leitura de metadados e datas cronológicas em formatos menos comuns.
-  * *Como obter:* Descarrega o executável Windows 64-bit em **[exiftool.org](https://exiftool.org)**, renomeia o ficheiro para `exiftool.exe` e coloca-o na pasta `Album/` (será detetado e ocultado automaticamente). Sem ele, o script usará os metadados nativos do Windows.
-* **`FFmpeg.exe` (Incluído)** — Utilitário essencial utilizado em pano de fundo pelo sistema para o processamento rápido e a geração automática de miniaturas (*thumbnails*) do teu álbum. Já vem integrado no projeto.
+* **`exiftool.exe` (Incluído)** — Utilitário desenvolvido por Phil Harvey. Serve para melhorar e otimizar a leitura de metadados e datas cronológicas em formatos menos comuns.
+* **`FFmpeg.exe` (Incluído)** — Utilitário essencial utilizado em pano de fundo pelo sistema para o processamento rápido e a geração automática de miniaturas (*thumbnails*) do teu álbum.
 
 ### 🇬🇧 English
 * **`exiftool.exe` (Optional)** — Utility developed by Phil Harvey. It improves and optimizes date and metadata reading for less common media formats.
-  * *How to get it:* Download the Windows 64-bit executable from **[exiftool.org](https://exiftool.org)**, rename it to `exiftool.exe`, and place it in the `Album/` folder (it will be automatically detected and hidden). Without it, the script falls back to native Windows metadata.
-* **`FFmpeg.exe` (Included)** — Essential core utility used under the hood for processing and automatically generating the album *thumbnails*. It is already pre-packed inside the project folder.
+* **`FFmpeg.exe` (Included)** — Essential core utility used under the hood for processing and automatically generating the album *thumbnails*. 
 
 ---
 
