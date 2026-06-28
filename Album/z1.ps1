@@ -341,6 +341,26 @@ $cfg['donate_url']   = Sanitize $cfg['donate_url']   'https://www.paypal.me/rubs
 $cfg['author']       = Sanitize $cfg['author']       'Ruben Silva'
 $cfg['project_name'] = Sanitize $cfg['project_name'] 'LOCALBUM - Offline Photo Album'
 
+# =================================================
+# Verificar FFmpeg — sempre pelo caminho local, nunca pelo PATH do sistema
+# =================================================
+$ffmpegCmd = $null
+$ffmpegLocal = Join-Path $root "ffmpeg.exe"
+if (Test-Path $ffmpegLocal) {
+    $ffmpegCmd = $ffmpegLocal
+    Write-Host "[OK] ffmpeg.exe encontrado na pasta Album"
+} else {
+    if ($cfg['language'] -eq 'en') {
+        Write-Host "[INFO] ffmpeg.exe not found - video thumbnails will not be generated"
+        Write-Host "       Download static build from https://ffmpeg.org (Windows > gyan.dev > ffmpeg-release-essentials)"
+        Write-Host "       Place ffmpeg.exe in the Album folder alongside exiftool.exe"
+    } else {
+        Write-Host "[INFO] ffmpeg.exe nao encontrado - thumbnails de video nao serao gerados"
+        Write-Host "       Descarrega a versao estatica em https://ffmpeg.org (Windows > gyan.dev > ffmpeg-release-essentials)"
+        Write-Host "       Coloca o ffmpeg.exe na pasta Album ao lado do exiftool.exe"
+    }
+}
+
 # Nome da página de saída
 if ($cfg['language'] -eq 'en') { $outName = "View album.html" }
 else                            { $outName = "Ver album.html" }
@@ -445,6 +465,43 @@ function New-Thumbnail {
 
     } catch {
         # Evitar letras vermelhas → ignorar erros silenciosamente
+    }
+}
+
+function New-VideoThumbnail {
+    param(
+        [string]$SourcePath,
+        [string]$ThumbPath,
+        [long]$SourceTicks
+    )
+
+    if (-not $ffmpegCmd) { return }
+
+    if (Test-Path $ThumbPath) {
+        if ((Get-Item $ThumbPath).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return }
+    }
+
+    try {
+        $dir = Split-Path $ThumbPath -Parent
+        if (-not (Test-Path $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+
+        # Tenta extrair o frame no 1º segundo; se falhar (vídeo muito curto), faz fallback para o frame 0
+        & $ffmpegCmd -i "$SourcePath" -ss 00:00:01 -vframes 1 `
+            -vf "scale=250:-1" -q:v 3 "$ThumbPath" -y 2>$null
+
+        if (-not (Test-Path $ThumbPath) -or (Get-Item $ThumbPath).Length -lt 512) {
+            & $ffmpegCmd -i "$SourcePath" -ss 00:00:00 -vframes 1 `
+                -vf "scale=250:-1" -q:v 3 "$ThumbPath" -y 2>$null
+        }
+
+        # Se mesmo assim falhar, apaga para não guardar lixo corrompido
+        if ((Test-Path $ThumbPath) -and (Get-Item $ThumbPath).Length -lt 512) {
+            Remove-Item $ThumbPath -Force
+        }
+    } catch {
+        # Falha silenciosa
     }
 }
 
@@ -623,16 +680,21 @@ $photoDate = "$yearFolder-$monthNum-01"
                 $recomputed++
             }
 
-            $ext = $file.Extension.ToLower()
+$ext = $file.Extension.ToLower()
+
+            $thumbDir  = Join-Path $thumbRoot "$yearFolder\$normMonth"
+            $thumbName = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
+            $thumbFull = Join-Path $thumbDir $thumbName
+            $thumbRel  = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
 
             if ($ext -in ".mp4", ".mov", ".webm", ".mkv", ".avi", ".mts", ".m2ts", ".3gp", ".hevc") {
-                $thumbRel = $null
-            }
-            else {
-                $thumbDir  = Join-Path $thumbRoot "$yearFolder\$normMonth"
-                $thumbName = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
-                $thumbFull = Join-Path $thumbDir $thumbName
-                $thumbRel  = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
+                if ($ffmpegCmd) {
+                    New-VideoThumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
+                    if (-not (Test-Path $thumbFull)) { $thumbRel = $null }
+                } else {
+                    $thumbRel = $null
+                }
+            } else {
                 New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
             }
 
