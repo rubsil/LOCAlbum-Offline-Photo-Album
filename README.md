@@ -140,6 +140,7 @@ X:
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
+      ├── FFmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -156,27 +157,17 @@ leaving only the **`LOCALBUM - Manager.bat`** visible — clean, simple, and rea
 
 ---
 
-## 🔍 ExifTool (opcional / optional)
+## 🛠️ Ferramentas Auxiliares / Helper Tools
 
-🇵🇹
-O LOCAlbum suporta o **ExifTool** de Phil Harvey para melhorar a leitura de datas em vídeos e formatos menos comuns.
+### 🇵🇹 Português
+* **`exiftool.exe` (Opcional)** — Utilitário desenvolvido por Phil Harvey. Serve para melhorar e otimizar a leitura de metadados e datas cronológicas em formatos menos comuns.
+  * *Como obter:* Descarrega o executável Windows 64-bit em **[exiftool.org](https://exiftool.org)**, renomeia o ficheiro para `exiftool.exe` e coloca-o na pasta `Album/` (será detetado e ocultado automaticamente). Sem ele, o script usará os metadados nativos do Windows.
+* **`FFmpeg.exe` (Incluído)** — Utilitário essencial utilizado em pano de fundo pelo sistema para o processamento rápido e a geração automática de miniaturas (*thumbnails*) do teu álbum. Já vem integrado no projeto.
 
-* Descarrega o executável Windows 64-bit em **[exiftool.org](https://exiftool.org)**
-* Renomeia o ficheiro para `exiftool.exe`
-* Coloca-o na pasta `Album/` — será detetado e ocultado automaticamente
-
-> ℹ️ Sem o ExifTool, o LOCAlbum continua a funcionar normalmente — usa o nome do ficheiro e os metadados do Windows para determinar as datas.
-
-🇬🇧
-LOCAlbum supports **ExifTool** by Phil Harvey for improved date reading on videos and less common formats.
-
-* Download the Windows 64-bit executable from **[exiftool.org](https://exiftool.org)**
-* Rename it to `exiftool.exe`
-* Place it in the `Album/` folder — it will be detected and hidden automatically
-
-> ℹ️ Without ExifTool, LOCAlbum works normally — it uses filenames and Windows metadata to determine dates.
-
-*ExifTool is free software by Phil Harvey — [exiftool.org](https://exiftool.org)*
+### 🇬🇧 English
+* **`exiftool.exe` (Optional)** — Utility developed by Phil Harvey. It improves and optimizes date and metadata reading for less common media formats.
+  * *How to get it:* Download the Windows 64-bit executable from **[exiftool.org](https://exiftool.org)**, rename it to `exiftool.exe`, and place it in the `Album/` folder (it will be automatically detected and hidden). Without it, the script falls back to native Windows metadata.
+* **`FFmpeg.exe` (Included)** — Essential core utility used under the hood for processing and automatically generating the album *thumbnails*. It is already pre-packed inside the project folder.
 
 ---
 
@@ -196,6 +187,7 @@ X:
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
+      ├── FFmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -253,6 +245,7 @@ X:
       ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
       ├── config (oculto / hidden)
       ├── exiftool.exe (oculto / hidden)
+      ├── FFmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
@@ -446,5 +439,9 @@ If this project was useful to you, consider supporting its development.
 Distribuído sob a **licença MIT** — uso livre, com crédito ao autor.  
 Distributed under the **MIT License** — free to use, with author attribution.
 
-This project optionally uses ExifTool by Phil Harvey (https://exiftool.org)
-for reading media metadata. ExifTool is free software — see exiftool.org for license details.
+### ⚖️ Softwares de Terceiros / Third-Party Software
+
+O **LOCAlbum** depende de excelentes ferramentas de código aberto desenvolvidas pela comunidade. Este projeto inclui e distribui ou suporta os seguintes utilitários sob as suas respetivas licenças originais:
+
+* **ExifTool** (por Phil Harvey) — Utilitário multiplataforma de leitura e escrita de metadados. Disponível em: [exiftool.org](https://exiftool.org) (Licenciado sob os mesmos termos do Perl: Artistic License / GPL).
+* **FFmpeg** — Solução completa e multiplataforma para processamento e gravação de áudio e vídeo. Disponível em: [ffmpeg.org](https://ffmpeg.org) (Licenciado sob a GNU Lesser General Public License - LGPLv2.1+). Os binários disponibilizados são builds estáticos oficiais de uso livre.
