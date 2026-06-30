@@ -189,6 +189,22 @@ try {
 }
 catch {}
 
+# Se for WEBP e exiftool falhou, tentar FFmpeg
+$ext = [System.IO.Path]::GetExtension($f.Name).ToLowerInvariant()
+if ($ext -eq ".webp" -and (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+    try {
+        $ffmpegDate = & ffmpeg -i "$($f.FullName)" 2>&1 | `
+            Select-String "creation_time" | `
+            Select-Object -First 1
+        
+        if ($ffmpegDate -match '(\d{4})-(\d{2})-(\d{2})') {
+            $extractedDate = [datetime]::Parse($matches[0])
+            return $extractedDate
+        }
+    }
+    catch {}
+}
+
 # 3️⃣ Windows Date Taken
 try {
     $folder = $global:ShellApp.Namespace($f.DirectoryName)
