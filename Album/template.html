@@ -194,7 +194,7 @@ main.viewer{
   border-radius:12px;
   padding:4px;
   display:grid;
-  grid-template-columns:1fr 340px;
+  grid-template-columns:1fr 270px;
   gap:10px;
   overflow:hidden;
 }
@@ -235,13 +235,13 @@ main.viewer{
   gap: 8px;
 }
 
-.thumb{display:flex;gap:10px;align-items:center;padding:6px;border-radius:8px;cursor:pointer;position:relative}
+.thumb{display:flex;flex-direction:column;align-items:center;padding:6px;border-radius:8px;cursor:pointer;position:relative}
 .thumb:hover{background:rgba(255,255,255,.06)}
 .thumb.active{background:rgba(255,255,255,.12)}
-.thumb img,.thumb video{width:96px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 auto; transition: transform 0.2s ease-out;}
+.thumb img,.thumb video{width:114px;height:80px;object-fit:cover;border-radius:6px;flex:0 0 auto;display:block;vertical-align:top; transition: transform 0.2s ease-out;}
 .thumb:hover img, .thumb:hover video{transform: scale(1.04);} /* Efeito de aproximação premium ao passar o rato */
 .thumb .date{font-size:12px;color:var(--muted);white-space:nowrap}
-.thumb .videoIcon{position:absolute;left:6px;bottom:6px;font-size:18px;color:#fff;text-shadow:0 0 4px #000;background:rgba(0,0,0,.4);border-radius:4px;padding:2px 4px;pointer-events:none}
+.thumb .videoIcon{position:absolute;left:6px;bottom:8px;font-size:22px;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.8);pointer-events:none}
 
 .footer{
   margin-top:3px;
@@ -367,31 +367,31 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
 }
 
 /* Separador de dias */
-.day-separator {
-  position: relative;
-  width: 100%;
-  height: 0;
-  margin: 1px 0;
-}
-
-.day-separator::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
+.day-label {
+  position: sticky;
   top: 0;
-  height: 1px;
+  z-index: 10;
   background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--accent) 75%, transparent) 15%,
-    color-mix(in srgb, var(--accent) 75%, transparent) 85%,
-    transparent 100%
+    to right,
+    rgba(0,0,0,.45) 0%,
+    rgba(0,0,0,.35) 50%,
+    rgba(0,0,0,0) 100%
   );
-  opacity: clamp(0.4, calc(0.8 - (var(--bg-luminance, 0.2) * 0.5)), 0.85);
-  pointer-events: none;
-  border-radius: 1px;
-  transition: opacity 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, black 8%, black 52%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, black 8%, black 52%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  mask-composite: intersect;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 2px;
 }
 
 /* ---------- Overlay Neste Dia ---------- */
@@ -799,10 +799,7 @@ function monthOrder(a, b) {
 }
 
 /* Formatação de datas */
-function fmtDate(iso){
-  if(!iso) return Lang === 'pt' ? 'Sem data' : 'No date';
-  const p = iso.split('-');
-  const d = new Date(p[0], p[1]-1, p[2]);
+function fmtDate(iso){  if(!iso) return Lang === 'pt' ? 'Sem data' : 'No date';  const datePart = iso.split(' ')[0];  const p = datePart.split('-');  const d = new Date(+p[0], +p[1]-1, +p[2]);
   if(isNaN(d)) return iso;
 
   if(Lang === 'pt'){
@@ -822,8 +819,7 @@ function fmtDate(iso){
 /* Idade */
 function ageStr(iso){
   if(!BIRTHDATE) return '';
-  const p=iso.split('-'); 
-  const d=new Date(p[0],p[1]-1,p[2]); 
+  const datePart=(iso||'').split(' ')[0];  const p=datePart.split('-');   const d=new Date(+p[0],+p[1]-1,+p[2]);
   if(isNaN(d)) return '';
   const bd=new Date(BIRTHDATE); 
   if(isNaN(bd) || d<bd) return '';
@@ -1126,14 +1122,11 @@ function renderThumbs(y, m) {
     activeThumbEl = null;
     if (typeof manifest === 'undefined' || !manifest[y] || !manifest[y][m]) return;
 
-    let list = manifest[y][m].slice().filter(it =>
-        matchFilterByName(it.name, currentFilter)
-    );
+    let list = monthListFiltered(y, m);
 
     if (m.toLowerCase() === "ecografias") {
         list.sort(ecoOrder);
         let group = "";
-
         list.forEach(it => {
             const lbl = fmtDate(it.date);
             if (lbl !== group) {
@@ -1148,22 +1141,26 @@ function renderThumbs(y, m) {
         return;
     }
 
-    list.sort((a, b) => new Date(a.date) - new Date(b.date));
+    list.sort((a, b) => {
+        const da = new Date((a.date||'').replace(' ','T'));
+        const db = new Date((b.date||'').replace(' ','T'));
+        return da - db;
+    });
 
-    let current = "";
-    let first = true;
+let lastDateOnly = "";
 
     list.forEach(it => {
-        if (it.date !== current) {
-            if (!first) {
-                const sep = document.createElement("div");
-                sep.className = "day-separator";
-                thumbsEl.appendChild(sep);
-            }
-            current = it.date;
+        const dateOnly = (it.date || "").substring(0, 10);
+        if (dateOnly !== lastDateOnly) {
+            const label = document.createElement("div");
+            label.className = "day-label";
+            label.textContent = dateOnly
+                ? fmtDate(dateOnly)
+                : (Lang === 'pt' ? 'Sem data' : 'No date');
+            thumbsEl.appendChild(label);
+            lastDateOnly = dateOnly;
         }
         addThumbCard(y, m, it);
-        first = false;
     });
 }
 
@@ -1171,37 +1168,36 @@ function addThumbCard(y, m, it) {
     const card = document.createElement('div');
     card.className = 'thumb';
 
-const ext = it.name.split('.').pop().toLowerCase();
-  const isVideo = VIDEO_EXTS.includes(ext);
-  const hasThumb = !!it.thumb;
+    const ext = it.name.split('.').pop().toLowerCase();
+    const isVideo = VIDEO_EXTS.includes(ext);
+    const hasThumb = !!it.thumb;
 
-  // Vídeo com thumbnail gerada → usa <img> (mais leve, sem carregamento do vídeo)
-  const el = (isVideo && !hasThumb)
-    ? document.createElement('video')
-    : document.createElement('img');
+const el = (isVideo && !hasThumb)
+        ? document.createElement('video')
+        : document.createElement('img');
 
-  el.src = (it.thumb || it.path).split('/').map(encodeURIComponent).join('/');
-  if (el.tagName === 'IMG') {
-    el.loading = 'lazy';
-    el.decoding = 'async';
-  } else if (el.tagName === 'VIDEO') {
-    el.muted = true;
-    el.preload = 'none';
-  }
+    el.src = (it.thumb || it.path).split('/').map(encodeURIComponent).join('/');
 
-    card.appendChild(el);
+    if (el.tagName === 'IMG') {
+        el.loading = 'lazy';
+        el.decoding = 'async';
+    } else if (el.tagName === 'VIDEO') {
+        el.muted = true;
+        el.preload = 'none';
+    }
+
+const mediaWrapper = document.createElement('div');
+    mediaWrapper.style.cssText = 'position:relative;display:inline-block;font-size:0;';
+    mediaWrapper.appendChild(el);
 
     if (isVideo) {
         const icon = document.createElement('div');
         icon.className = 'videoIcon';
         icon.textContent = '🎬';
-        card.appendChild(icon);
+        mediaWrapper.appendChild(icon);
     }
 
-    const d = document.createElement('div');
-    d.className = 'date';
-    d.textContent = fmtDate(it.date);
-    card.appendChild(d);
+    card.appendChild(mediaWrapper);
 
 card.onclick = () => {
       const idx = indexMap.get(`${y}|${m}|${it.name}`);
