@@ -20,7 +20,7 @@ for %%I in ("%ROOT%\..") do set "SOURCE_DIR=%%~fI"
 :: =====================================================
 ::  OCULTAR ficheiros técnicos logo ao arrancar
 :: =====================================================
-for %%A in (z1.ps1 z3.ps1 template.html favicon.png ajuda_album.png exiftool.exe ffmpeg.exe) do (
+for %%A in (z1.ps1 z3.ps1 z-backup.ps1 template.html favicon.png ajuda_album.png exiftool.exe ffmpeg.exe) do (
     if exist "%ROOT%\%%A" (
         attrib +h +s "%ROOT%\%%A" >nul 2>&1
     )
@@ -153,11 +153,41 @@ echo          Esta opção NÃO apaga as tuas fotos nem vídeos da pasta "Album\
 echo          Serve apenas para repor o LOCALBUM ao estado original, como se fosse novo.
 echo          Depois, basta voltar a correr a opção [2] para criar tudo novamente.
 echo.
-echo ► [4] FAZER CÓPIA DE SEGURANÇA (BACKUP)
-echo        - Cria uma cópia de segurança idêntica e incremental de todo o teu álbum (incluindo fotos,
-echo          miniaturas, configurações e a página do site HTML) para outro disco ou pen USB.
-echo          Como usa o modo não-destrutivo (/E), o Robocopy apenas adiciona os ficheiros novos ou
-echo          atualizados e NUNCA apaga nada na pasta de destino escolhida.
+echo ► [4] FAZER CÓPIA DE SEGURANÇA (BACKUP INCREMENTAL)
+echo.
+echo        Qual é a diferença entre LOCALBUM e Backup?
+echo.
+echo        LOCALBUM é uma FERRAMENTA que organiza e visualiza as tuas fotos
+echo        num álbum bonito e interactivo — como um "visualizador inteligente".
+echo.
+echo        MAS e se perderes o disco? E se o PC falhar? E se tiveres um acidente?
+echo        Por isso existe a opção [4]: para PROTEGER as tuas fotos e álbum.
+echo.
+echo        Esta opção cria uma cópia INCREMENTAL de TODO o teu álbum:
+echo        ✓ Todas as tuas fotos (Album/Fotos)
+echo        ✓ Miniaturas geradas (Album/Thumbnails)
+echo        ✓ Álbum HTML (Ver album.html)
+echo        ✓ Configurações (config.ini)
+echo.
+echo        Podes guardar num disco externo, pen USB, ou até nuvem local.
+echo.
+echo        ⚠️  SEGURANÇA 3-2-1 (recomendado):
+echo.
+echo        3 CÓPIAS      = Original (PC) + Backup 1 (disco externo) + Backup 2 (outro local)
+echo        2 TIPOS       = Disco rígido + Armazenamento portátil
+echo        1 OFFSITE     = Pelo menos uma cópia num local físico diferente
+echo.
+echo        Assim garantas que, MESMO que algo aconteça ao PC principal,
+echo        as tuas fotografias estão seguras noutro(s) lado(s).
+echo.
+echo        ➤ Como funciona?
+echo        - Corre a opção [1] para organizar fotos
+echo        - Corre a opção [2] para gerar o álbum
+echo        - Corre a opção [4] regularmente (mensal/trimestral)
+echo        - Guarda a pasta de destino num sítio seguro
+echo.
+echo        Cada vez que corre [4], atualiza APENAS os ficheiros novos/alterados
+echo        — não recopia tudo, economizando tempo e espaço.
 echo.
 echo ► [i] INFORMAÇÕES / AJUDA
 echo        - Mostra esta explicação. Tudo é offline — nada é enviado/recebido da Internet.
@@ -211,15 +241,45 @@ echo          It does NOT delete your photos or videos in "Album\Fotos".
 echo          This simply resets LOCALBUM to its original state, as if it was never used.
 echo          After using this option, run [2] again to re-enter your information.
 echo.
-echo ► [4] CREATE BACKUP (INCREMENTAL)
-echo        - Generates an exact, incremental safety copy of your ENTIRE album structure (including
-echo          photos, thumbnails, configurations, and the generated HTML website) to an external drive.
-echo          Since it operates in cumulative mode, it only adds newly discovered or updated
-echo          files and will NEVER delete preexisting data within your chosen target directory.
+echo ► [4] CREATE BACKUP - INCREMENTAL SAFETY COPY
+echo.
+echo        What's the difference between LOCALBUM and Backup?
+echo.
+echo        LOCALBUM is a TOOL that organizes and displays your photos
+echo        in a beautiful, interactive album — like a "smart viewer".
+echo.
+echo        BUT what if you lose the disk? What if your PC fails? What if disaster strikes?
+echo        That's why option [4] exists: to PROTECT your photos and album.
+echo.
+echo        This option creates an INCREMENTAL copy of your ENTIRE album:
+echo        ✓ All your photos (Album/Fotos)
+echo        ✓ Generated thumbnails (Album/Thumbnails)
+echo        ✓ Album HTML (View album.html)
+echo        ✓ Configuration (config.ini)
+echo.
+echo        You can save to an external drive, USB pen, or local cloud storage.
+echo.
+echo        ⚠️  RECOMMENDED 3-2-1 SECURITY STRATEGY:
+echo.
+echo        3 COPIES      = Original (PC) + Backup 1 (external drive) + Backup 2 (other location)
+echo        2 TYPES       = Hard drive + Portable storage
+echo        1 OFFSITE     = At least one copy in a different physical location
+echo.
+echo        This ensures that, EVEN if your main PC fails or suffers an accident,
+echo        your precious photographs remain safe elsewhere.
+echo.
+echo        ➤ How does it work?
+echo        - Run option [1] to organize your photos
+echo        - Run option [2] to generate the album
+echo        - Run option [4] regularly (monthly/quarterly)
+echo        - Store the backup folder in a safe place
+echo.
+echo        Each time you run [4], it updates ONLY new/modified files
+echo        — it doesn't recopy everything, saving time and space.
 echo.
 echo ► [i] INFORMATION / HELP
 echo        - Displays this explanation window.
-echo          Everything runs 100%% offline — nothing is sent to or received from the Internet.
+echo          Everything all runs offline — nothing is sent to or received from the Internet.
 echo =====================================================
 echo NOTE:
 echo The generated album file "View album.html" (or "Ver album.html" in Portuguese)
@@ -267,8 +327,8 @@ if not exist "%ROOT%\z1.ps1" (
 if "%LANG%"=="pt" (
     echo Como queres atualizar o album?
     echo.
-    echo [A] Atualizacao Rapida    - usa o cache de pastas ^(opcao recomendada se usaste sempre a opcao [1]^)
-    echo [B] Atualizacao completa  - volta a fazer scan a tudo ^(uso manual no Explorer^)
+    echo [A] Pagina Rapida        - usa o cache de pastas ^(opcao recomendada se usaste sempre a opcao [1]^)
+    echo [B] Atualizacao completa - volta a fazer scan a tudo ^(uso manual no Explorer^)
     echo.
 ) else (
     echo How do you want to update the album?
@@ -382,109 +442,19 @@ if "%LANG%"=="pt" (
 :BACKUP
 cls
 if "%LANG%"=="pt" (
-    echo =====================================================
-    echo        LOCALBUM - Cópia de Segurança [Backup]
-    echo =====================================================
-    echo.
-    echo Esta opção faz uma cópia incremental de TODO o teu álbum
-    echo [fotos, miniaturas, configurações e site HTML].
-    echo Usa o modo cumulativo /E, ou seja, nunca apaga nada no destino.
-    echo.
-    echo [INFO] A abrir a janela de seleção de pasta...
-    set "MSG_EXPLORER=Escolha a pasta de destino para o Backup do LOCALBUM:"
+    echo [INFO] A iniciar a copia de seguranca incremental...
 ) else (
-    echo =====================================================
-    echo        LOCALBUM - Incremental Backup
-    echo =====================================================
-    echo.
-    echo This option creates an incremental copy of your ENTIRE album
-    echo [photos, thumbnails, configs, and HTML files].
-    echo Uses cumulative mode /E, meaning it never deletes anything in the destination.
-    echo.
-    echo [INFO] Opening folder selection window...
-    set "MSG_EXPLORER=Select the destination folder for the LOCALBUM Backup:"
+    echo [INFO] Starting incremental backup...
 )
-
-:: Janela de seleção gráfica nativa via PowerShell (Ficheiro temporário isola parênteses do CMD)
-set "BACKUP_DEST="
-set "TEMP_TXT=%TEMP%\localbum_backup_dir.txt"
-if exist "%TEMP_TXT%" del /f /q "%TEMP_TXT%" >nul 2>&1
-
-"%PWSH%" -NoProfile -STA -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.Description = '%MSG_EXPLORER%'; $f.ShowNewFolderButton = $true; if($f.ShowDialog() -eq 'OK'){ $f.SelectedPath }" > "%TEMP_TXT%"
-
-if exist "%TEMP_TXT%" (
-    set /p BACKUP_DEST=<"%TEMP_TXT%"
-    del /f /q "%TEMP_TXT%" >nul 2>&1
-)
-
-if "%BACKUP_DEST%"=="" (
-    if "%LANG%"=="pt" (echo Operação cancelada pelo utilizador.&timeout /t 2 >nul&goto MENU_PT) else (echo Operation cancelled by user.&timeout /t 2 >nul&goto MENU_EN)
-)
-
-:: Limpar aspas e normalizar caminhos absolutos
-set "BACKUP_DEST=%BACKUP_DEST:"=%"
-for %%A in ("%SOURCE_DIR%") do set "SRC=%%~fA"
-for %%A in ("%BACKUP_DEST%") do set "DST=%%~fA"
-
-:: VALIDAÇÃO 1: Bloquear Destino igual à Origem
-if /I "%SRC%"=="%DST%" (
-    echo.
-    if "%LANG%"=="pt" (echo ERRO: O destino não pode ser a própria pasta do LOCALBUM.) else (echo ERROR: The destination cannot be the LOCALBUM folder itself.)
-    echo.
+echo.
+if not exist "%ROOT%\z-backup.ps1" (
+    if "%LANG%"=="pt" (
+        echo [ERRO] Ficheiro z-backup.ps1 nao encontrado!
+    ) else (
+        echo [ERROR] File z-backup.ps1 not found!
+    )
     pause
     if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
-
-:: VALIDAÇÃO 2: Bloquear Destino DENTRO da Origem (evita loops infinitos)
-echo "%DST%" | find /I "%SRC%" >nul
-if not errorlevel 1 (
-    echo.
-    if "%LANG%"=="pt" (echo ERRO: O destino não pode estar dentro da pasta do LOCALBUM.) else (echo ERROR: The destination cannot be inside the LOCALBUM folder.)
-    echo.
-    pause
-    if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
-)
-
-:: Ecrã de Confirmação interativo
-cls
-echo ==========================================
-if "%LANG%"=="pt" (
-    echo              CONFIRMAR BACKUP
-    echo ==========================================
-    echo Origem:  %SRC%
-    echo Destino: %DST%
-    echo ==========================================
-    echo.
-    choice /M "Pretende iniciar o backup"
-    if errorlevel 2 goto MENU_PT
-    echo.
-    echo A copiar ficheiros de forma segura...
-) else (
-    echo              CONFIRM BACKUP
-    echo ==========================================
-    echo Source:      %SRC%
-    echo Destination: %DST%
-    echo ==========================================
-    echo.
-    choice /M "Do you want to start the backup"
-    if errorlevel 2 goto MENU_EN
-    echo.
-    echo Copying files safely...
-)
-echo.
-
-:: Execução do Robocopy em modo /E (Seguro e Incremental) e filtragem de lixo do sistema
-robocopy "%SRC%" "%DST%" /E /R:1 /W:1 /FFT /XJD /XF Thumbs.db desktop.ini
-set "RC=%ERRORLEVEL%"
-
-echo.
-:: Validação real do resultado obtido pelo Robocopy (Códigos >= 8 são erros fatais)
-if %RC% GEQ 8 (
-    if "%LANG%"=="pt" (echo [ERRO] O backup falhou ou terminou com erros graves!) else (echo [ERROR] The backup failed or finished with critical errors!)
-) else (
-    if "%LANG%"=="pt" (echo [OK] Cópia de segurança concluída com sucesso!) else (echo [OK] Backup completed successfully!)
-)
-
-echo.
-pause
+"%PWSH%" -ExecutionPolicy Bypass -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '%ROOT%\z-backup.ps1' -lang '%LANG%'"
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
