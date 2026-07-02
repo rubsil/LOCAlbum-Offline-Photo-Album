@@ -348,7 +348,7 @@ $ffmpegCmd = $null
 $ffmpegLocal = Join-Path $root "ffmpeg.exe"
 if (Test-Path $ffmpegLocal) {
     $ffmpegCmd = $ffmpegLocal
-    Write-Host "[OK] ffmpeg.exe encontrado na pasta Album"
+    Write-Host "[OK] ffmpeg.exe encontrado na pasta Album" -ForegroundColor Green
 } else {
     if ($cfg['language'] -eq 'en') {
         Write-Host "[INFO] ffmpeg.exe not found - video thumbnails will not be generated"
@@ -418,24 +418,6 @@ function New-Thumbnail {
     # Se a thumbnail existe e é mais recente → skip
     if (Test-Path $ThumbPath) {
         if ( (Get-Item $ThumbPath).LastWriteTimeUtc.Ticks -ge $SourceTicks ) {
-            return
-        }
-    }
-
-# Se for WEBP ou HEIC, converter para JPEG via FFmpeg
-    $ext = [System.IO.Path]::GetExtension($SourcePath).ToLowerInvariant()
-    if ($ext -in ".webp", ".heic", ".heif") {
-        if (-not $ffmpegCmd) { return }
-        
-        try {
-            $dir = Split-Path $ThumbPath -Parent
-            if (-not (Test-Path $dir)) {
-                New-Item -ItemType Directory -Path $dir -Force | Out-Null
-            }
-            
-            & $ffmpegCmd -i "$SourcePath" -q:v 3 "$ThumbPath" -y 2>$null
-            return
-        } catch {
             return
         }
     }
@@ -556,11 +538,6 @@ $fromCache  = 0
 $recomputed = 0
 $fromFrozen = 0
 
-# Contadores para progress visual (apenas sessão actual)
-$sessionProcessed = 0
-$sessionFromCache = 0
-$sessionRecomputed = 0
-
 # Loop: ano → mês → ficheiros
 Get-ChildItem -Path $base -Directory |
     Where-Object { $foldersToIgnore -notcontains $_.Name.Trim() } |
@@ -647,25 +624,10 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
             }
             # ==================================================================
 
-$sessionProcessed++
-            
-            # Só mostrar barra se houver efectivamente novos a processar
-            if ($recomputed -gt 0 -and $totalFiles -gt 0) {
-                $progressMsg = if ($cfg['language'] -eq 'en') {
-                    "Processing (Cached: $fromCache, New: $recomputed)"
-                } else {
-                    "Processando (Cache: $fromCache, Novos: $recomputed)"
-                }
-                
-                $statusMsg = if ($cfg['language'] -eq 'en') {
-                    "Files processed: $sessionProcessed"
-                } else {
-                    "Ficheiros processados: $sessionProcessed"
-                }
-                
-                Write-Progress -Activity $progressMsg `
-                                -Status $statusMsg `
-                                -PercentComplete 50
+            if ($totalFiles -gt 0) {
+                Write-Progress -Activity $msg_processing `
+                                -Status "$processed / $totalFiles" `
+                                -PercentComplete ([int](100 * $processed / $totalFiles))
             }
 
             $name      = $file.Name
@@ -792,8 +754,6 @@ $ext = $file.Extension.ToLower()
                 } else {
                     $thumbRel = $null
                 }
-            } elseif ($ext -in ".webp", ".heic", ".heif") {
-                New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
             } else {
                 New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
             }
@@ -912,38 +872,13 @@ if (Test-Path $thumbRoot) {
 }
 
 Write-Host ""
-Write-Host "════════════════════════════════════════"
-
-if ($cfg['language'] -eq 'en') {
-    Write-Host "Update Summary"
-    Write-Host "════════════════════════════════════════"
-    Write-Host "  Total files in album:         $totalFiles"
-    Write-Host "  Frozen folders (skipped):     $fromFrozen"
-    Write-Host "  Reused from cache:            $fromCache"
-    Write-Host "  New/modified (EXIF):          $recomputed"
-    Write-Host ""
-    if ($fromFrozen -gt 0 -or $fromCache -gt $recomputed) {
-        Write-Host "✓ Quick update completed!" -ForegroundColor Green
-    } else {
-        Write-Host "⚙️ Full scan completed!" -ForegroundColor Green
-    }
-} else {
-    Write-Host "Resumo da Atualização"
-    Write-Host "════════════════════════════════════════"
-    Write-Host "  Total de ficheiros no álbum:  $totalFiles"
-    Write-Host "  Pastas congeladas (skip):     $fromFrozen"
-    Write-Host "  Reutilizados do cache:        $fromCache"
-    Write-Host "  Novos/alterados (EXIF):       $recomputed"
-    Write-Host ""
-    if ($fromFrozen -gt 0 -or $fromCache -gt $recomputed) {
-        Write-Host "✓ Atualização rápida concluída!" -ForegroundColor Green
-    } else {
-        Write-Host "⚙️ Scan completo concluído!" -ForegroundColor Green
-    }
-}
-
-Write-Host "════════════════════════════════════════"
+Write-Host "Resumo processamento:" -ForegroundColor Cyan
+Write-Host "  Total de ficheiros:           $totalFiles"
+Write-Host "  Pastas congeladas (skip):     $fromFrozen"
+Write-Host "  Reutilizados do cache:        $fromCache"
+Write-Host "  Novos/alterados (scan EXIF):  $recomputed"
 Write-Host ""
+
 # =================================================
 # INJETAR CONFIG + MANIFEST NO TEMPLATE.HTML
 # =================================================
