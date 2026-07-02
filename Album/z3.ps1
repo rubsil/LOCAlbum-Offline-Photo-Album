@@ -189,22 +189,6 @@ try {
 }
 catch {}
 
-# Se for WEBP e exiftool falhou, tentar FFmpeg
-$ext = [System.IO.Path]::GetExtension($f.Name).ToLowerInvariant()
-if ($ext -eq ".webp" -and (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
-    try {
-        $ffmpegDate = & ffmpeg -i "$($f.FullName)" 2>&1 | `
-            Select-String "creation_time" | `
-            Select-Object -First 1
-        
-        if ($ffmpegDate -match '(\d{4})-(\d{2})-(\d{2})') {
-            $extractedDate = [datetime]::Parse($matches[0])
-            return $extractedDate
-        }
-    }
-    catch {}
-}
-
 # 3️⃣ Windows Date Taken
 try {
     $folder = $global:ShellApp.Namespace($f.DirectoryName)
@@ -295,7 +279,7 @@ foreach($f in $files){
 
     if (-not (Test-Path $target)) {
 Copy-Item $f.FullName -Destination $target
-        Write-Host "[OK] $($f.Name) -> $year\$month"
+        Write-Host "[✓ OK] $($f.Name) → $year\$month" -ForegroundColor Green
         # Descongelar pasta de destino
         $frozenFlag = Join-Path $tgt "_frozen.flag"
         if (Test-Path $frozenFlag) { Remove-Item $frozenFlag -Force }
@@ -326,14 +310,14 @@ else {
         }
     }
     catch {
-        Write-Host "[ERRO] Falha ao comparar hash de $($f.Name): $_"
+        Write-Host "[ERRO] Falha ao comparar hash de $($f.Name): $_" -ForegroundColor Red
     }
 }
 }
 
 Write-Host ""
 Write-Host "-------------------------------------------"
-Write-Host $msg_done
+Write-Host $msg_done -ForegroundColor Green
 Write-Host $msg_reminder
 Write-Host ""
 Write-Host "Press any key to exit..."
