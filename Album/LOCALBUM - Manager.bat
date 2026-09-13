@@ -389,6 +389,11 @@ if "%LANG%"=="pt" (
         rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
     )
 
+    if exist "%ROOT%\Converted\" (
+        attrib -h "%ROOT%\Converted" >nul 2>&1
+        rmdir /s /q "%ROOT%\Converted" >nul 2>&1
+    )
+
     if exist "%ROOT%\Fotos" (
         for /r "%ROOT%\Fotos" %%F in (_frozen.flag _cache_mes.json) do (
             if exist "%%F" del /f /q "%%F" >nul 2>&1
@@ -422,6 +427,11 @@ if "%LANG%"=="pt" (
     if exist "%ROOT%\Thumbnails\" (
         attrib -h "%ROOT%\Thumbnails" >nul 2>&1
         rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
+    )
+
+    if exist "%ROOT%\Converted\" (
+        attrib -h "%ROOT%\Converted" >nul 2>&1
+        rmdir /s /q "%ROOT%\Converted" >nul 2>&1
     )
 
     if exist "%ROOT%\Fotos" (
