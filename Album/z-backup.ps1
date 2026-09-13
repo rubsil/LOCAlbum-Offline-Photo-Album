@@ -1,4 +1,4 @@
-﻿# =================================================
+# =================================================
 # LOCALBUM - Offline Photo Album - Incremental Backup
 # =================================================
 
@@ -264,7 +264,7 @@ if ($totalFoldersToProcess -eq 0) {
 
 # --- Guardar manifest actualizado ---
 $manifest | ConvertTo-Json | Set-Content -Path $manifestPath -Encoding UTF8
-attrib +h +s "$manifestPath" > $null 2>&1
+attrib +h "$manifestPath" > $null 2>&1
 
 $endTime = Get-Date
 $elapsed = $endTime - $startTime
