@@ -22,7 +22,7 @@ for %%I in ("%ROOT%\..") do set "SOURCE_DIR=%%~fI"
 :: =====================================================
 for %%A in (z1.ps1 z3.ps1 z-backup.ps1 template.html favicon.png ajuda_album.png exiftool.exe exiftool_files exiftool_files.zip ffmpeg.exe) do (
     if exist "%ROOT%\%%A" (
-        attrib +h +s "%ROOT%\%%A" >nul 2>&1
+        attrib +h "%ROOT%\%%A" >nul 2>&1
     )
 )
 
@@ -344,7 +344,7 @@ if /i "!UPDATE_MODE!"=="B" (
     if exist "%ROOT%\Fotos" (
         for /r "%ROOT%\Fotos" %%F in (_frozen.flag) do (
             if exist "%%F" (
-                attrib -h -s "%%F" >nul 2>&1
+                attrib -h "%%F" >nul 2>&1
                 del /f /q "%%F" >nul 2>&1
             )
         )
@@ -373,19 +373,19 @@ if "%LANG%"=="pt" (
     choice /c SN /m "Queres continuar?"
     if errorlevel 2 (echo Operacao cancelada.&timeout /t 2 >nul&goto MENU_PT)
 
-    attrib -h -s "%INI%" >nul 2>&1
+    attrib -h "%INI%" >nul 2>&1
     del /f /q "%INI%" >nul 2>&1
 
     del /f /q "%ROOT%\..\Ver album.html" >nul 2>&1
     del /f /q "%ROOT%\..\View album.html" >nul 2>&1
 
     if exist "%ROOT%\localbum-cache.json" (
-        attrib -h -s "%ROOT%\localbum-cache.json" >nul 2>&1
+        attrib -h "%ROOT%\localbum-cache.json" >nul 2>&1
         del /f /q "%ROOT%\localbum-cache.json" >nul 2>&1
     )
 
     if exist "%ROOT%\Thumbnails\" (
-        attrib -h -s "%ROOT%\Thumbnails" >nul 2>&1
+        attrib -h "%ROOT%\Thumbnails" >nul 2>&1
         rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
     )
 
@@ -408,19 +408,19 @@ if "%LANG%"=="pt" (
     choice /c YN /m "Do you want to continue?"
     if errorlevel 2 (echo Operation cancelled.&timeout /t 2 >nul&goto MENU_EN)
 
-    attrib -h -s "%INI%" >nul 2>&1
+    attrib -h "%INI%" >nul 2>&1
     del /f /q "%INI%" >nul 2>&1
 
     del /f /q "%ROOT%\..\Ver album.html" >nul 2>&1
     del /f /q "%ROOT%\..\View album.html" >nul 2>&1
 
     if exist "%ROOT%\localbum-cache.json" (
-        attrib -h -s "%ROOT%\localbum-cache.json" >nul 2>&1
+        attrib -h "%ROOT%\localbum-cache.json" >nul 2>&1
         del /f /q "%ROOT%\localbum-cache.json" >nul 2>&1
     )
 
     if exist "%ROOT%\Thumbnails\" (
-        attrib -h -s "%ROOT%\Thumbnails" >nul 2>&1
+        attrib -h "%ROOT%\Thumbnails" >nul 2>&1
         rmdir /s /q "%ROOT%\Thumbnails" >nul 2>&1
     )
 
