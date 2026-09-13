@@ -74,18 +74,45 @@ Write-Host $msg_start
 Write-Host "-------------------------------------------"
 
 # Verificar exiftool — primeiro na pasta local, depois no PATH
+# NOTA: exiftool.exe sozinho é apenas um "lançador" — sem a pasta
+# "exiftool_files" ao lado, ele existe mas falha sempre a correr.
+# Por isso testamos se realmente funciona (-ver), não só se o ficheiro existe.
+$exiftoolFilesDir = Join-Path $root "exiftool_files"
+$exiftoolZip      = Join-Path $root "exiftool_files.zip"
+if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
+    # A pasta exiftool_files pode vir compactada num único .zip (o GitHub Web UI
+    # não permite enviar de uma vez uma pasta com muitos ficheiros pequenos)
+    try { Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force } catch { }
+}
+
 $exiftoolLocal = Join-Path $root "exiftool.exe"
 if (Test-Path $exiftoolLocal) {
     $env:PATH = "$root;$env:PATH"  # garante que o script o encontra
-} elseif (-not (Get-Command exiftool -ErrorAction SilentlyContinue)) {
+}
+
+$exiftoolOK = $false
+if (Get-Command exiftool -ErrorAction SilentlyContinue) {
+    try {
+        $verOutput = & exiftool -ver 2>$null
+        if ($verOutput -match '^\d') { $exiftoolOK = $true }
+    } catch { }
+}
+
+if (-not $exiftoolOK) {
     if ($lang -eq "en") {
-        Write-Host "[WARNING] exiftool not found - dates for some videos may be inaccurate"
-        Write-Host "          Download from https://exiftool.org and place exiftool.exe in the Album folder"
+        Write-Host "[WARNING] exiftool is missing or not working - dates for some videos/HEIC may be inaccurate"
+        Write-Host "          Download the FULL package from https://exiftool.org (the .zip contains"
+        Write-Host "          'exiftool(-k).exe' AND a folder called 'exiftool_files' - you need BOTH,"
+        Write-Host "          the .exe alone will not run). Rename the exe to 'exiftool.exe' and place"
+        Write-Host "          it together with the 'exiftool_files' folder in the Album folder."
         $open = Read-Host "Open download page now? (Y/N)"
         if ($open -eq "Y") { Start-Process "https://exiftool.org" }
     } else {
-        Write-Host "[AVISO] exiftool nao encontrado - datas de alguns videos podem ser imprecisas"
-        Write-Host "        Descarrega em https://exiftool.org e coloca o exiftool.exe na pasta Album"
+        Write-Host "[AVISO] exiftool esta em falta ou nao funciona - datas de alguns videos/HEIC podem ser imprecisas"
+        Write-Host "        Descarrega o pacote COMPLETO em https://exiftool.org (o .zip contem o"
+        Write-Host "        'exiftool(-k).exe' E uma pasta chamada 'exiftool_files' - precisas dos DOIS,"
+        Write-Host "        o .exe sozinho nao funciona). Renomeia o exe para 'exiftool.exe' e coloca-o"
+        Write-Host "        junto com a pasta 'exiftool_files' dentro da pasta Album."
         $open = Read-Host "Abrir pagina de download agora? (S/N)"
         if ($open -eq "S") { Start-Process "https://exiftool.org" }
     }
