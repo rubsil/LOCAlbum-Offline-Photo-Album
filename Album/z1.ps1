@@ -350,7 +350,12 @@ $exiftoolZip      = Join-Path $root "exiftool_files.zip"
 if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
     # A pasta exiftool_files pode vir compactada num único .zip (o GitHub Web UI
     # não permite enviar de uma vez uma pasta com muitos ficheiros pequenos)
-    try { Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force } catch { }
+    try {
+        Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force
+        # Esconde-a já, sem esperar pelo próximo arranque do .bat (que só
+        # esconde ficheiros que já existiam no início da sessão)
+        attrib +h "$exiftoolFilesDir" > $null 2>&1
+    } catch { }
 }
 
 $exiftoolExe = $null
