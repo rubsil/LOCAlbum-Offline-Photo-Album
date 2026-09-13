@@ -63,11 +63,12 @@ Perfect for parents capturing their children's growth and memories.
 2. ▶️ **Executa o ficheiro** `LOCALBUM - Manager.bat`.  
    - Este é agora o **único ficheiro necessário**: todas as funções estão reunidas aqui.  
    - Ao abrir, escolhe o idioma (**Português / English**).  
-   - O menu principal mostra quatro opções:
+   - O menu principal mostra cinco opções:
      ```
      [1] Organizar fotos automaticamente
      [2] Atualizar / Criar álbum (HTML)
      [3] Repor / Resetar o álbum
+     [4] Fazer Cópia de Segurança
      [i] Informações / Ajuda
      [0] Sair
      ```
@@ -80,6 +81,7 @@ Perfect for parents capturing their children's growth and memories.
   > 🔍 *Nota:* Se existirem muitas fotos, este processo pode demorar um pouco na primeira execução devido à criação das thumbnails.  
   > ⚡ A partir da segunda execução será quase instantâneo graças ao sistema de **pastas congeladas** — só processa pastas com fotos novas.
 - **[3]** repõe o projeto ao estado original, **sem apagar as tuas fotos**.  
+- **[4]** faz uma cópia de segurança incremental das tuas fotos, thumbnails e configuração — recomendada para o disco externo/pen USB seguirem a regra 3-2-1.  
 - **[i]** mostra ajuda e instruções.
 
 4. 💾 O ficheiro `Ver album.html` será criado automaticamente **ao lado da pasta `Album/`.**
@@ -100,11 +102,12 @@ Perfect for parents capturing their children's growth and memories.
 2. ▶️ **Run the file** `LOCALBUM - Manager.bat`.  
    - This is now the **only file you need** — all functions are unified here.  
    - When it opens, choose your language (**Portuguese / English**).  
-   - The main menu offers four options:
+   - The main menu offers five options:
      ```
      [1] Auto-organize photos
      [2] Update / Create album (HTML)
      [3] Reset album
+     [4] Create Backup (Incremental)
      [i] Information / Help
      [0] Exit
      ```
@@ -117,6 +120,7 @@ Perfect for parents capturing their children's growth and memories.
   > 🔍 *Note:* If you have many photos, the first run may take a while because thumbnails must be created.  
   > ⚡ From the second run onwards, updates are nearly instant thanks to the **frozen folders** system — only folders with new photos are rescanned. 
 - **[3]** resets the project to its original state, **without deleting your photos**.  
+- **[4]** creates an incremental backup of your photos, thumbnails, and configuration — recommended for your external drive/USB stick as part of a 3-2-1 strategy.  
 - **[i]** displays help and instructions.
 
 4. 💾 The file `View album.html` will be automatically created **next to the `Album/` folder.**
@@ -442,9 +446,9 @@ Distributed under the **MIT License** — free to use, with author attribution.
 🇵🇹 O **LOCAlbum** depende de excelentes ferramentas de código aberto desenvolvidas pela comunidade. Este projeto inclui e distribui ou suporta os seguintes utilitários sob as suas respetivas licenças originais:
 
 * **ExifTool** (por Phil Harvey) — Utilitário multiplataforma de leitura e escrita de metadados. Disponível em: [exiftool.org](https://exiftool.org) (Licenciado sob os mesmos termos do Perl: Artistic License / GPL).
-* **FFmpeg** — Solução completa e multiplataforma para processamento e gravação de áudio e vídeo. Disponível em: [ffmpeg.org](https://ffmpeg.org) (Licenciado sob a GNU Lesser General Public License - LGPLv2.1+). Os binários disponibilizados são builds estáticos oficiais de uso livre.
+* **FFmpeg** — Solução completa e multiplataforma para processamento e gravação de áudio e vídeo. Disponível em: [ffmpeg.org](https://ffmpeg.org). O binário incluído é a build estática "essentials" [2026-06-26-git-d66e84695b](https://github.com/GyanD/codexffmpeg/releases/tag/2026-06-26-git-d66e84695b) da [gyan.dev](https://www.gyan.dev/ffmpeg/builds/), licenciada sob a **GNU General Public License v3 (GPLv3)** — não LGPL. Código-fonte correspondente a este build: [FFmpeg/FFmpeg@d66e84695b](https://github.com/FFmpeg/FFmpeg/commit/d66e84695b). O FFmpeg é invocado apenas como processo externo (não é ligado/linkado ao código do LOCAlbum), mas se fores redistribuir este projeto verifica as obrigações de disponibilização de código-fonte da GPLv3. *(Nota: isto não é aconselhamento jurídico — consulta um profissional se tiveres dúvidas sobre conformidade de licenças.)*
 
 🇬🇧 **LOCAlbum** relies on excellent open-source tools developed by the community. This project includes, distributes, or supports the following utilities under their respective original licenses:
 
 * **ExifTool** (by Phil Harvey) — A cross-platform utility for reading and writing metadata. Available at: [exiftool.org](https://exiftool.org) (Licensed under the same terms as Perl: Artistic License / GPL).
-* **FFmpeg** — A complete, cross-platform solution to record, convert, and stream audio and video. Available at: [ffmpeg.org](https://ffmpeg.org) (Licensed under the GNU Lesser General Public License - LGPLv2.1+). The provided binaries are official static builds free for use.
+* **FFmpeg** — A complete, cross-platform solution to record, convert, and stream audio and video. Available at: [ffmpeg.org](https://ffmpeg.org). The bundled binary is the "essentials" static build [2026-06-26-git-d66e84695b](https://github.com/GyanD/codexffmpeg/releases/tag/2026-06-26-git-d66e84695b) from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/), licensed under the **GNU General Public License v3 (GPLv3)** — not LGPL. Corresponding source for this build: [FFmpeg/FFmpeg@d66e84695b](https://github.com/FFmpeg/FFmpeg/commit/d66e84695b). FFmpeg is invoked only as an external process (not linked into LOCAlbum's own code), but if you redistribute this project, check the GPLv3 source-availability obligations. *(Note: this is not legal advice — consult a professional if you have licensing compliance questions.)*
