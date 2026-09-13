@@ -161,6 +161,7 @@ $iniPath      = Join-Path $root "config.ini"
 $cachePath    = Join-Path $root "localbum-cache.json"
 $albumRoot    = Split-Path $root -Parent
 $thumbRoot    = Join-Path $albumRoot "Album\Thumbnails"
+$convertedRoot = Join-Path $albumRoot "Album\Converted"
 
 Write-Host ""
 Write-Host "====================================================="
@@ -562,6 +563,46 @@ function New-VideoThumbnail {
 }
 
 # =================================================
+# Função: converter HEIC/HEIF para JPG (via ffmpeg)
+# =================================================
+# Chrome/Firefox não mostram .heic diretamente, e o GDI+ (usado nas miniaturas)
+# também pode falhar sem o codec HEIF opcional da Microsoft Store instalado.
+# Convertemos para uma cópia JPG e usamos essa cópia para tudo — o ficheiro
+# original em Fotos/ nunca é tocado nem apagado.
+function Convert-HeicToJpg {
+    param(
+        [string]$SourcePath,
+        [string]$JpgPath,
+        [long]$SourceTicks
+    )
+
+    if (-not $ffmpegCmd) { return $false }
+
+    if (Test-Path $JpgPath) {
+        if ((Get-Item $JpgPath).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return $true }
+    }
+
+    try {
+        $dir = Split-Path $JpgPath -Parent
+        if (-not (Test-Path $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+
+        & $ffmpegCmd -i "$SourcePath" -q:v 3 "$JpgPath" -y 2>$null
+
+        if ((Test-Path $JpgPath) -and (Get-Item $JpgPath).Length -ge 512) {
+            return $true
+        } else {
+            if (Test-Path $JpgPath) { Remove-Item $JpgPath -Force }
+            return $false
+        }
+    } catch {
+        if (Test-Path $JpgPath) { Remove-Item $JpgPath -Force }
+        return $false
+    }
+}
+
+# =================================================
 # Função: normalizar pastas (remover acentos)
 # =================================================
 function Normalize-Name($name) {
@@ -803,6 +844,18 @@ $ext = $file.Extension.ToLower()
             $thumbFull = Join-Path $thumbDir $thumbName
             $thumbRel  = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
 
+            $displayPath = "Album/Fotos/$yearFolder/$monthFolder/$name"
+            $thumbSource = $file.FullName
+
+            if ($ext -in ".heic", ".heif") {
+                $convDir  = Join-Path $convertedRoot "$yearFolder\$normMonth"
+                $convFull = Join-Path $convDir $thumbName
+                if (Convert-HeicToJpg -SourcePath $file.FullName -JpgPath $convFull -SourceTicks $lastWrite) {
+                    $thumbSource = $convFull
+                    $displayPath = "Album/Converted/$yearFolder/$normMonth/$thumbName"
+                }
+            }
+
             if ($ext -in ".mp4", ".mov", ".webm", ".mkv", ".avi", ".mts", ".m2ts", ".3gp", ".hevc") {
                 if ($ffmpegCmd) {
                     New-VideoThumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
@@ -811,12 +864,12 @@ $ext = $file.Extension.ToLower()
                     $thumbRel = $null
                 }
             } else {
-                New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
+                New-Thumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $lastWrite
             }
 
             $manifest[$yearFolder][$monthFolder].Add([pscustomobject]@{
                 name  = $name
-                path  = "Album/Fotos/$yearFolder/$monthFolder/$name"
+                path  = $displayPath
                 thumb = $thumbRel
                 date  = $photoDate
             })
@@ -888,17 +941,30 @@ if ($noDateFullPath) {
         $ext  = $file.Extension.ToLower()
 
         $thumbRel = $null
+        $displayPath = "Album/Fotos/$noDateFolderLeaf/$name"
+
         if ($ext -notin @(".mp4",".mov",".webm",".mkv",".avi",".mts",".m2ts",".3gp",".hevc")) {
             $thumbDir  = Join-Path $thumbRoot "$specialYear\$normSpecial"
             $thumbName = [IO.Path]::GetFileNameWithoutExtension($name) + ".jpg"
             $thumbFull = Join-Path $thumbDir $thumbName
             $thumbRel  = "Album/Thumbnails/$specialYear/$normSpecial/$thumbName"
-            New-Thumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $file.LastWriteTimeUtc.Ticks
+            $thumbSource = $file.FullName
+
+            if ($ext -in ".heic", ".heif") {
+                $convDir  = Join-Path $convertedRoot "$specialYear\$normSpecial"
+                $convFull = Join-Path $convDir $thumbName
+                if (Convert-HeicToJpg -SourcePath $file.FullName -JpgPath $convFull -SourceTicks $file.LastWriteTimeUtc.Ticks) {
+                    $thumbSource = $convFull
+                    $displayPath = "Album/Converted/$specialYear/$normSpecial/$thumbName"
+                }
+            }
+
+            New-Thumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $file.LastWriteTimeUtc.Ticks
         }
 
         $manifest[$specialYear][$specialMonth].Add([pscustomobject]@{
             name  = $name
-            path  = "Album/Fotos/$noDateFolderLeaf/$name"
+            path  = $displayPath
             thumb = $thumbRel
             date  = ""
         })
@@ -925,6 +991,11 @@ attrib +h "$cachePath" > $null 2>&1
 # Tornar a pasta Thumbnails invisível também
 if (Test-Path $thumbRoot) {
     attrib +h "$thumbRoot" > $null 2>&1
+}
+
+# Tornar a pasta Converted invisível também (cópias JPG dos HEIC)
+if (Test-Path $convertedRoot) {
+    attrib +h "$convertedRoot" > $null 2>&1
 }
 
 Write-Host ""
