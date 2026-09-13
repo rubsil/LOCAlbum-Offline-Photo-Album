@@ -317,7 +317,7 @@ else {
     $lines = @()
     foreach ($k in $cfg.Keys) { $lines += "$k=$($cfg[$k])" }
     Set-Content -Path $iniPath -Value $lines -Encoding UTF8
-    attrib +h +s "$iniPath" > $null 2>&1
+    attrib +h "$iniPath" > $null 2>&1
     Write-Host ""
     Write-Host "Ficheiro config.ini guardado e ocultado em:"
     Write-Host "  $iniPath"
@@ -823,8 +823,8 @@ $ext = $file.Extension.ToLower()
             Set-Content -Path $cacheMonth -Encoding UTF8
 
         [System.IO.File]::WriteAllText($frozenFlag, "")
-        attrib +h +s "$frozenFlag" > $null 2>&1
-        attrib +h +s "$cacheMonth" > $null 2>&1
+        attrib +h "$frozenFlag" > $null 2>&1
+        attrib +h "$cacheMonth" > $null 2>&1
     }
 }
 
@@ -915,11 +915,11 @@ $cacheArray | ConvertTo-Json -Depth 5 |
     Set-Content -Path $cachePath -Encoding UTF8
 
 # Tornar cache invisível
-attrib +h +s "$cachePath" > $null 2>&1
+attrib +h "$cachePath" > $null 2>&1
 
 # Tornar a pasta Thumbnails invisível também
 if (Test-Path $thumbRoot) {
-    attrib +h +s "$thumbRoot" > $null 2>&1
+    attrib +h "$thumbRoot" > $null 2>&1
 }
 
 Write-Host ""
