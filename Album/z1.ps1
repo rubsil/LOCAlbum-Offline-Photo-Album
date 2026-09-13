@@ -342,6 +342,36 @@ $cfg['author']       = Sanitize $cfg['author']       'Ruben Silva'
 $cfg['project_name'] = Sanitize $cfg['project_name'] 'LOCALBUM - Offline Photo Album'
 
 # =================================================
+# Verificar exiftool — sempre pelo caminho local, nunca pelo PATH do sistema
+# (evita depender de o exiftool ter sido encontrado antes numa outra sessão)
+# =================================================
+$exiftoolFilesDir = Join-Path $root "exiftool_files"
+$exiftoolZip      = Join-Path $root "exiftool_files.zip"
+if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
+    # A pasta exiftool_files pode vir compactada num único .zip (o GitHub Web UI
+    # não permite enviar de uma vez uma pasta com muitos ficheiros pequenos)
+    try { Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force } catch { }
+}
+
+$exiftoolExe = $null
+$exiftoolLocal = Join-Path $root "exiftool.exe"
+if (Test-Path $exiftoolLocal) {
+    try {
+        $verOutput = & $exiftoolLocal -ver 2>$null
+        if ($verOutput -match '^\d') { $exiftoolExe = $exiftoolLocal }
+    } catch { }
+}
+if ($exiftoolExe) {
+    Write-Host "[OK] exiftool encontrado e funcional" -ForegroundColor Green
+} else {
+    if ($cfg['language'] -eq 'en') {
+        Write-Host "[INFO] exiftool not working - dates for some HEIC/videos may be inaccurate"
+    } else {
+        Write-Host "[INFO] exiftool nao esta a funcionar - datas de alguns HEIC/videos podem ser imprecisas"
+    }
+}
+
+# =================================================
 # Verificar FFmpeg — sempre pelo caminho local, nunca pelo PATH do sistema
 # =================================================
 $ffmpegCmd = $null
@@ -430,6 +460,27 @@ function New-Thumbnail {
         }
 
         $img = [System.Drawing.Image]::FromFile($SourcePath)
+
+        # ── Corrigir orientação EXIF (tag 0x0112) antes de redimensionar ──
+        # Sem isto, fotos verticais (ex: iPhone) ficam de lado na miniatura,
+        # embora apareçam corretas no visualizador grande (o browser já roda
+        # o ficheiro original sozinho).
+        try {
+            $ORIENTATION_ID = 0x0112
+            if ($img.PropertyIdList -contains $ORIENTATION_ID) {
+                $orientation = [byte]($img.GetPropertyItem($ORIENTATION_ID).Value[0])
+                switch ($orientation) {
+                    2 { $img.RotateFlip([System.Drawing.RotateFlipType]::RotateNoneFlipX) }
+                    3 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate180FlipNone) }
+                    4 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate180FlipX) }
+                    5 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate90FlipX) }
+                    6 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate90FlipNone) }
+                    7 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate270FlipX) }
+                    8 { $img.RotateFlip([System.Drawing.RotateFlipType]::Rotate270FlipNone) }
+                    default { } # 1 = normal, nada a fazer
+                }
+            }
+        } catch { }
 
         $maxW = 250
         $maxH = 250
@@ -708,9 +759,9 @@ foreach ($pat in $patterns) {
                     }
                 }
 
-                if (-not $photoDate -and (Get-Command exiftool -ErrorAction SilentlyContinue)) {
+                if (-not $photoDate -and $exiftoolExe) {
                     try {
-                        $exifDate = & exiftool -DateTimeOriginal -CreateDate -s -s -s `
+                        $exifDate = & $exiftoolExe -DateTimeOriginal -CreateDate -s -s -s `
                                     -d "%Y-%m-%d %H:%M:%S" $file.FullName |
                                     Where-Object { $_ -match '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$' } |
                                     Select-Object -First 1
