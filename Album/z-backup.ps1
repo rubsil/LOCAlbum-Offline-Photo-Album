@@ -58,6 +58,12 @@ if ($lang -eq "en") {
     $msg_files_copied    = "Files copied"
     $msg_size_copied     = "Size copied"
     $msg_time_elapsed    = "Time elapsed"
+    $msg_space_needed    = "Space needed"
+    $msg_space_free      = "Free space at destination"
+    $msg_space_low       = "[WARNING] Not enough free space at the destination!"
+    $msg_space_continue  = "Continue anyway? The backup may end up incomplete. (Y/N)"
+    $msg_space_aborted   = "Backup cancelled. Free up space and try again."
+    $msg_space_ok        = "[OK] Enough free space at the destination."
 } else {
     $msg_start           = "[INFO] A iniciar copia de seguranca incremental..."
     $msg_select_source   = "Escolhe pasta de origem (Album\Fotos)"
@@ -74,6 +80,12 @@ if ($lang -eq "en") {
     $msg_files_copied    = "Ficheiros copiados"
     $msg_size_copied     = "Tamanho copiado"
     $msg_time_elapsed    = "Tempo decorrido"
+    $msg_space_needed    = "Espaco necessario"
+    $msg_space_free      = "Espaco livre no destino"
+    $msg_space_low       = "[AVISO] Nao ha espaco livre suficiente no destino!"
+    $msg_space_continue  = "Continuar mesmo assim? A copia pode ficar incompleta. (S/N)"
+    $msg_space_aborted   = "Copia cancelada. Liberta espaco e tenta novamente."
+    $msg_space_ok        = "[OK] Espaco livre suficiente no destino."
 }
 
 Write-Host ""
@@ -189,6 +201,49 @@ foreach ($yearFolder in $years) {
 
 $totalFoldersToProcess = $allFoldersToCheck.Count
 $currentFolderIndex = 0
+
+# --- Verificar espaco livre no destino ANTES de copiar ---
+# Um backup que fica a meio por falta de espaco e pior do que nenhum:
+# parece ter corrido bem mas deixa fotos por copiar.
+if ($totalFoldersToProcess -gt 0) {
+    $bytesNeeded = 0
+    foreach ($folderInfo in $allFoldersToCheck) {
+        try {
+            $bytesNeeded += (Get-ChildItem -Path $folderInfo.path -File |
+                             Measure-Object -Property Length -Sum).Sum
+        } catch { }
+    }
+
+    $freeBytes = $null
+    try {
+        $dstRoot = [System.IO.Path]::GetPathRoot((Resolve-Path $dst).Path)
+        $driveInfo = New-Object System.IO.DriveInfo($dstRoot)
+        $freeBytes = $driveInfo.AvailableFreeSpace
+    } catch { }
+
+    $neededMB = [math]::Round($bytesNeeded / 1MB, 1)
+    Write-Host ("{0}: {1} MB" -f $msg_space_needed, $neededMB)
+
+    if ($freeBytes -ne $null) {
+        $freeMB = [math]::Round($freeBytes / 1MB, 1)
+        Write-Host ("{0}: {1} MB" -f $msg_space_free, $freeMB)
+        Write-Host ""
+
+        # Margem de 5% para metadados e variacoes do sistema de ficheiros
+        if ($freeBytes -lt ($bytesNeeded * 1.05)) {
+            Write-Host $msg_space_low -ForegroundColor Red
+            $goOn = Read-Host $msg_space_continue
+            if ($goOn -ne "S" -and $goOn -ne "s" -and $goOn -ne "Y" -and $goOn -ne "y") {
+                Write-Host $msg_space_aborted -ForegroundColor Yellow
+                pause
+                exit
+            }
+        } else {
+            Write-Host $msg_space_ok -ForegroundColor Green
+        }
+        Write-Host ""
+    }
+}
 
 # --- Loop: processar apenas pastas alteradas ---
 foreach ($folderInfo in $allFoldersToCheck) {
