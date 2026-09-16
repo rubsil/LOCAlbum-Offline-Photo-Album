@@ -1387,6 +1387,44 @@ document.addEventListener('keydown',e=>{
   if(['ArrowLeft','ArrowRight'].includes(e.key)){ document.body.classList.add('show-arrows'); showHud(); }
 });
 
+// ===== Gestos tácteis (deslizar para navegar) =====
+let swipedRecently = false;
+// Em tablets/telemóveis não há teclado: deslizar o dedo para o lado
+// avança ou recua a foto, tal como as setas <- e ->.
+(function initSwipe(){
+  const MIN_DIST = 50;   // px mínimos para contar como deslize
+  const MAX_OFF  = 80;   // tolerância vertical (evita disparar ao rolar a página)
+  let x0 = null, y0 = null;
+
+  function onStart(e){
+    if(e.touches.length !== 1){ x0 = null; return; }  // ignora pinça/zoom
+    x0 = e.touches[0].clientX;
+    y0 = e.touches[0].clientY;
+  }
+
+  function onEnd(e){
+    if(x0 === null) return;
+    const t = e.changedTouches && e.changedTouches[0];
+    if(!t){ x0 = null; return; }
+    const dx = t.clientX - x0;
+    const dy = t.clientY - y0;
+    x0 = null;
+    if(Math.abs(dy) > MAX_OFF) return;      // foi um scroll vertical
+    if(Math.abs(dx) < MIN_DIST) return;     // deslize demasiado curto
+    // Marca que houve deslize, para o clique seguinte não fechar o zoom
+    swipedRecently = true;
+    setTimeout(()=>{ swipedRecently = false; }, 400);
+    if(dx < 0) next(); else prev();
+    showHud();
+  }
+
+  [stage, document.getElementById('zoomOverlay')].forEach(el => {
+    if(!el) return;
+    el.addEventListener('touchstart', onStart, {passive:true});
+    el.addEventListener('touchend',   onEnd,   {passive:true});
+  });
+})();
+
 function parseDateSafe(dateStr){
   if(!dateStr || typeof dateStr !== "string") return null;
   let m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -1535,7 +1573,10 @@ function openZoom(src){
 }
 function closeOnThisDay(){ document.getElementById('otdOverlay').style.display='none'; }
 window.closeOnThisDay = closeOnThisDay;
-function closeZoom(){ document.getElementById('zoomOverlay').style.display='none'; }
+function closeZoom(){
+  if(swipedRecently) return;  // veio de um deslize, não de um toque para fechar
+  document.getElementById('zoomOverlay').style.display='none';
+}
 
 /* ===== Inicialização ===== */
 function init(){
