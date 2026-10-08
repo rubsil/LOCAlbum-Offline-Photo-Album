@@ -178,7 +178,10 @@ $filesTotalCopied = 0
 $sizeTotalCopied = 0
 $startTime = Get-Date
 
-# --- Pre-contar pastas a processar ---
+# --- Pre-contar pastas/ficheiros a processar ---
+# Comparacao feita ficheiro a ficheiro (tamanho + data de modificacao),
+# nao pela data da pasta — assim o z1.ps1 pode correr sem triggerar backups
+# desnecessarios.
 $years = Get-ChildItem -Path $src -Directory | Sort-Object Name
 $allFoldersToCheck = @()
 
@@ -189,26 +192,35 @@ foreach ($yearFolder in $years) {
     foreach ($monthFolder in $months) {
         $monthName = $monthFolder.Name
         $folderKey = "$yearName/$monthName"
-        
-        $srcLastWrite = $monthFolder.LastWriteTimeUtc
-        $needsCopy = $false
 
-        if ($manifest.ContainsKey($folderKey)) {
-            $lastBackupTime = [datetime]$manifest[$folderKey]
-            if ($srcLastWrite -gt $lastBackupTime) {
-                $needsCopy = $true
+        # Destino correspondente
+        $dstMonthScan = Join-Path $dst (Join-Path $yearName $monthName)
+
+        # Verificar ficheiro a ficheiro se ha algo novo ou alterado
+        $srcFiles = Get-ChildItem -Path $monthFolder.FullName -File
+        $filesToCopy = @()
+        foreach ($sf in $srcFiles) {
+            $dfPath = Join-Path $dstMonthScan $sf.Name
+            if (-not (Test-Path $dfPath)) {
+                # Ficheiro novo
+                $filesToCopy += $sf
+            } else {
+                $df = Get-Item $dfPath
+                # Copia se tamanho ou data diferente (tolerancia de 2s para FAT32/exFAT)
+                if ($sf.Length -ne $df.Length -or
+                    [math]::Abs(($sf.LastWriteTimeUtc - $df.LastWriteTimeUtc).TotalSeconds) -gt 2) {
+                    $filesToCopy += $sf
+                }
             }
-        } else {
-            $needsCopy = $true
         }
 
-        if ($needsCopy) {
+        if ($filesToCopy.Count -gt 0) {
             $allFoldersToCheck += @{
-                key = $folderKey
-                year = $yearName
-                month = $monthName
-                path = $monthFolder.FullName
-                lastWrite = $srcLastWrite
+                key       = $folderKey
+                year      = $yearName
+                month     = $monthName
+                path      = $monthFolder.FullName
+                files     = $filesToCopy
             }
         }
     }
@@ -224,8 +236,7 @@ if ($totalFoldersToProcess -gt 0) {
     $bytesNeeded = 0
     foreach ($folderInfo in $allFoldersToCheck) {
         try {
-            $bytesNeeded += (Get-ChildItem -Path $folderInfo.path -File |
-                             Measure-Object -Property Length -Sum).Sum
+            $bytesNeeded += ($folderInfo.files | Measure-Object -Property Length -Sum).Sum
         } catch { }
     }
 
@@ -269,7 +280,8 @@ foreach ($folderInfo in $allFoldersToCheck) {
     $monthFolderPath = $folderInfo.path
     $srcLastWrite = $folderInfo.lastWrite
 
-    Write-Host "  [COPIAR] $folderKey" -ForegroundColor Yellow
+    $pctFolder = [int](100 * $currentFolderIndex / $totalFoldersToProcess)
+    Write-Host "  [COPIAR $currentFolderIndex/$totalFoldersToProcess - $pctFolder%] $folderKey" -ForegroundColor Yellow
 
     # Criar estrutura de pastas no destino
     $dstYear = Join-Path $dst $yearName
@@ -279,8 +291,8 @@ foreach ($folderInfo in $allFoldersToCheck) {
         New-Item -ItemType Directory -Path $dstMonth -Force | Out-Null
     }
 
-    # Contar e copiar ficheiros
-    $files = Get-ChildItem -Path $monthFolderPath -File
+    # Usar lista pre-calculada de ficheiros novos/alterados
+    $files = $folderInfo.files
     $totalFiles = $files.Count
     $currentFileIndex = 0
 
@@ -294,19 +306,23 @@ foreach ($folderInfo in $allFoldersToCheck) {
         $progressMsg = if ($lang -eq "en") { "Copying ($currentFolderIndex/$totalFoldersToProcess pastas)" } 
                        else { "A copiar ($currentFolderIndex/$totalFoldersToProcess pastas)" }
         
-        $statusMsg = "$folderKey | $currentFileIndex/$totalFiles ficheiros"
+        # Barra 1 (pasta): "2024/dezembro | 3/29 pastas (31%)"
+        $statusMsg = "$folderKey | $currentFolderIndex/$totalFoldersToProcess pastas ($folderPercent%)"
         
         Write-Progress -Activity $progressMsg `
                        -Status $statusMsg `
                        -PercentComplete $folderPercent `
                        -Id 1
         
+        # Barra 2 (ficheiro): "291/687 ficheiros (42%)"
         Write-Progress -Activity "Ficheiros" `
-                       -Status "$currentFileIndex/$totalFiles" `
+                       -Status "$currentFileIndex/$totalFiles ficheiros ($pctFile%)" `
                        -PercentComplete $filePercent `
                        -ParentId 1 `
                        -Id 2
 
+        $pctFile = if ($totalFiles -gt 0) { [int](100 * $currentFileIndex / $totalFiles) } else { 100 }
+        Write-Host ("    [{0}/{1} {2}%] {3}" -f $currentFileIndex, $totalFiles, $pctFile, $file.Name)
         # Verificar se o ficheiro ainda existe antes de copiar
         # (pode ter sido removido entre o scan e a copia)
         if (-not (Test-Path $file.FullName)) {
@@ -323,8 +339,8 @@ foreach ($folderInfo in $allFoldersToCheck) {
         }
     }
 
-    # Atualizar timestamp no manifest
-    $manifest[$folderKey] = $srcLastWrite.ToString("o")
+    # Atualizar timestamp no manifest (referencia; decisao real e feita ficheiro a ficheiro)
+    $manifest[$folderKey] = (Get-Date).ToUniversalTime().ToString("o")
     
     [System.Console]::Out.Flush()
 }
