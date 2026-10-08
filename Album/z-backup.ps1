@@ -307,13 +307,19 @@ foreach ($folderInfo in $allFoldersToCheck) {
                        -ParentId 1 `
                        -Id 2
 
+        # Verificar se o ficheiro ainda existe antes de copiar
+        # (pode ter sido removido entre o scan e a copia)
+        if (-not (Test-Path $file.FullName)) {
+            Write-Host "    [AVISO] Ficheiro nao encontrado, ignorado: $($file.Name)" -ForegroundColor Yellow
+            continue
+        }
         try {
             $destFile = Join-Path $dstMonth $file.Name
             Copy-Item -Path $file.FullName -Destination $destFile -Force
             $filesTotalCopied++
             $sizeTotalCopied += $file.Length
         } catch {
-            Write-Host "    [ERRO] Falha ao copiar: $($file.Name)" -ForegroundColor Red
+            Write-Host "    [ERRO] Falha ao copiar: $($file.Name): $_" -ForegroundColor Red
         }
     }
 
