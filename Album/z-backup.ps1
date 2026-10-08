@@ -45,7 +45,7 @@ if (Test-Path $iniPath) {
 if ($lang -eq "en") {
     $msg_start           = "[INFO] Starting incremental backup..."
     $msg_select_source   = "Select source folder (Album\Fotos)"
-    $msg_select_dest     = "Select destination folder for backup"
+    $msg_select_dest     = "Select destination folder for backup (tip: select an existing LOCAlbum-Backup folder, or any folder to create one inside)"
     $msg_cancel          = "No folder selected. Exiting..."
     $msg_invalid_source  = "Source folder does not contain Fotos subfolder"
     $msg_scanning        = "Scanning folders..."
@@ -67,7 +67,7 @@ if ($lang -eq "en") {
 } else {
     $msg_start           = "[INFO] A iniciar copia de seguranca incremental..."
     $msg_select_source   = "Escolhe pasta de origem (Album\Fotos)"
-    $msg_select_dest     = "Escolhe pasta de destino para o backup"
+    $msg_select_dest     = "Escolhe a pasta de destino (se ja tiveres uma pasta LOCAlbum-Backup, seleciona-a directamente; caso contrario escolhe qualquer pasta e ela sera criada automaticamente)"
     $msg_cancel          = "Nenhuma pasta selecionada. A sair..."
     $msg_invalid_source  = "Pasta de origem nao contem a subpasta Fotos"
     $msg_scanning        = "A analisar pastas..."
@@ -129,13 +129,28 @@ if (-not $src) { Write-Host $msg_cancel; pause; exit }
 $dst = Select-FolderDialog $msg_select_dest
 if (-not $dst) { Write-Host $msg_cancel; pause; exit }
 
+# Criar/usar sempre uma pasta raiz dedicada dentro do destino escolhido,
+# para nao largar pastas de anos directamente na raiz do disco/pen/pasta.
+# Se o utilizador ja escolheu a pasta LOCAlbum-Backup directamente, nao duplicar.
+if ([System.IO.Path]::GetFileName($dst) -ne 'LOCAlbum-Backup') {
+    $dst = Join-Path $dst "LOCAlbum-Backup"
+    if ($lang -eq "en") {
+        Write-Host "[INFO] A dedicated backup folder will be used: $dst" -ForegroundColor Cyan
+        Write-Host "       Next time you can select this folder directly." -ForegroundColor Cyan
+    } else {
+        Write-Host "[INFO] Sera usada uma pasta dedicada para o backup: $dst" -ForegroundColor Cyan
+        Write-Host "       Da proxima vez podes seleccionar essa pasta directamente." -ForegroundColor Cyan
+    }
+    Write-Host ""
+}
+
 # Garantir que destino existe
 if (-not (Test-Path $dst)) {
     New-Item -ItemType Directory -Path $dst -Force | Out-Null
 }
 
 Write-Host "Origem:  $src"
-Write-Host "Destino: $dst"
+Write-Host "Destino: $dst  (subpasta LOCAlbum-Backup criada/usada automaticamente)"
 Write-Host ""
 Write-Host $msg_scanning
 Write-Host ""
