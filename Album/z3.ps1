@@ -264,6 +264,9 @@ catch {}
 $files = Get-ChildItem -Path $src -Include *.jpg,*.jpeg,*.png,*.gif,*.webp,*.tif,*.tiff,*.heic,*.heif,
         *.mp4,*.mov,*.webm,*.mkv,*.avi,*.mts,*.m2ts,*.3gp,*.hevc -Recurse
 
+$z3Total = $files.Count
+$z3Done  = 0
+
 $heicCount = ($files | Where-Object { $_.Extension -match '\.(heic|heif)$' }).Count
 if ($heicCount -gt 0 -and -not (Get-Command exiftool -ErrorAction SilentlyContinue)) {
     if ($lang -eq "en") {
@@ -276,16 +279,28 @@ if ($heicCount -gt 0 -and -not (Get-Command exiftool -ErrorAction SilentlyContin
     Write-Host ""
 }
 
+$msg_progress = if ($lang -eq "en") { "Organizing photos" } else { "A organizar fotos" }
+
 foreach($f in $files){
+    # Progresso: conta TODOS os ficheiros (copiados, saltados e sem data),
+    # para a percentagem chegar sempre aos 100%
+    $z3Done++
+    $z3Pct = if ($z3Total -gt 0) { [int][Math]::Floor(100 * $z3Done / $z3Total) } else { 100 }
+    Write-Progress -Activity "$msg_progress ($z3Pct%)" `
+                   -Status "$z3Done / $z3Total ($z3Pct%)" `
+                   -CurrentOperation $f.Name `
+                   -PercentComplete $z3Pct
+    $tag = "[{0}/{1} {2}%]" -f $z3Done, $z3Total, $z3Pct
+
     $dt = Get-DateSmart $f
 
     if (-not $dt) {
         $no = Join-Path $dst $noDateFolderName
-        if (!(Test-Path $no)) { New-Item -ItemType Directory -Path $no -Force | Out-Null }
+        if (!(Test-Path -LiteralPath $no)) { New-Item -ItemType Directory -Path $no -Force | Out-Null }
         $target = Join-Path $no $f.Name
-        if (-not (Test-Path $target)) {
-            Copy-Item $f.FullName -Destination $target
-            Write-Host "[WARN] $msg_no_exif : $($f.Name)"
+        if (-not (Test-Path -LiteralPath $target)) {
+            Copy-Item -LiteralPath $f.FullName -Destination $target
+            Write-Host "$tag [WARN] $msg_no_exif : $($f.Name)"
         }
         continue
     }
@@ -293,11 +308,11 @@ foreach($f in $files){
     $now = Get-Date
     if ($dt -gt $now.AddYears(1) -or $dt.Year -lt 1970) {
         $no = Join-Path $dst $noDateFolderName
-        if (!(Test-Path $no)) { New-Item -ItemType Directory -Path $no -Force | Out-Null }
+        if (!(Test-Path -LiteralPath $no)) { New-Item -ItemType Directory -Path $no -Force | Out-Null }
         $target = Join-Path $no $f.Name
-        if (-not (Test-Path $target)) {
-            Copy-Item $f.FullName -Destination $target
-            Write-Host "[WARN] Data invalida ($($dt)) -> movido para: $noDateFolderName ($($f.Name))"
+        if (-not (Test-Path -LiteralPath $target)) {
+            Copy-Item -LiteralPath $f.FullName -Destination $target
+            Write-Host "$tag [WARN] Data invalida ($($dt)) -> movido para: $noDateFolderName ($($f.Name))"
         }
         continue
     }
@@ -305,47 +320,62 @@ foreach($f in $files){
     $year  = $dt.Year
     $month = $dt.ToString("MMMM", $ci)
     $tgt   = Join-Path $dst "$year\$month"
-    if (!(Test-Path $tgt)) { New-Item -ItemType Directory -Path $tgt -Force | Out-Null }
+    if (!(Test-Path -LiteralPath $tgt)) { New-Item -ItemType Directory -Path $tgt -Force | Out-Null }
 
     $target = Join-Path $tgt $f.Name
 
-    if (-not (Test-Path $target)) {
-Copy-Item $f.FullName -Destination $target
-        Write-Host "[OK] $($f.Name) -> $year\$month" -ForegroundColor Green
+    if (-not (Test-Path -LiteralPath $target)) {
+        Copy-Item -LiteralPath $f.FullName -Destination $target
+        Write-Host "$tag [OK] $($f.Name) -> $year\$month" -ForegroundColor Green
         # Descongelar pasta de destino
         $frozenFlag = Join-Path $tgt "_frozen.flag"
-        if (Test-Path $frozenFlag) { Remove-Item $frozenFlag -Force }
+        if (Test-Path -LiteralPath $frozenFlag) { Remove-Item -LiteralPath $frozenFlag -Force }
     }
-else {
-    try {
-        $hash1 = (Get-FileHash -Algorithm SHA1 -Path $f.FullName).Hash
-        $hash2 = (Get-FileHash -Algorithm SHA1 -Path $target).Hash
-
-        if ($hash1 -eq $hash2) {
-            Write-Host "[SKIP] $($f.Name) (duplicado exato - mesmo conteudo)"
-        }
-        else {
+    else {
+        try {
+            $hashSrc  = (Get-FileHash -Algorithm SHA1 -LiteralPath $f.FullName).Hash
             $baseName = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
-            $ext = [System.IO.Path]::GetExtension($f.Name)
-            $dupIndex = 1
-            do {
-                $newName = "${baseName}_DUP$dupIndex$ext"
-                $newTarget = Join-Path $tgt $newName
-                $dupIndex++
-            } while (Test-Path $newTarget)
+            $ext      = [System.IO.Path]::GetExtension($f.Name)
 
-            Copy-Item $f.FullName -Destination $newTarget
-            Write-Host "[COPIADO] $($f.Name) (conteudo diferente, guardado como $newName)"
-            # Descongelar pasta de destino
-            $frozenFlag = Join-Path $tgt "_frozen.flag"
-            if (Test-Path $frozenFlag) { Remove-Item $frozenFlag -Force }
+            # Comparar com o ficheiro original E com todas as copias _DUP que ja
+            # existam. Antes so comparava com o original, por isso cada nova
+            # execucao sobre a mesma origem criava mais um _DUP1, _DUP2, _DUP3...
+            $candidates = @($target)
+            $candidates += @(Get-ChildItem -LiteralPath $tgt -File -Force -Filter "${baseName}_DUP*$ext" -ErrorAction SilentlyContinue |
+                             ForEach-Object { $_.FullName })
+
+            $dupOf = $null
+            foreach ($c in $candidates) {
+                if ((Get-FileHash -Algorithm SHA1 -LiteralPath $c).Hash -eq $hashSrc) {
+                    $dupOf = [System.IO.Path]::GetFileName($c)
+                    break
+                }
+            }
+
+            if ($dupOf) {
+                Write-Host "$tag [SKIP] $($f.Name) (duplicado exato de $dupOf)"
+            }
+            else {
+                $dupIndex = 1
+                do {
+                    $newName   = "${baseName}_DUP$dupIndex$ext"
+                    $newTarget = Join-Path $tgt $newName
+                    $dupIndex++
+                } while (Test-Path -LiteralPath $newTarget)
+
+                Copy-Item -LiteralPath $f.FullName -Destination $newTarget
+                Write-Host "$tag [COPIADO] $($f.Name) (conteudo diferente, guardado como $newName)"
+                # Descongelar pasta de destino
+                $frozenFlag = Join-Path $tgt "_frozen.flag"
+                if (Test-Path -LiteralPath $frozenFlag) { Remove-Item -LiteralPath $frozenFlag -Force }
+            }
+        }
+        catch {
+            Write-Host "$tag [ERRO] Falha ao comparar hash de $($f.Name): $_" -ForegroundColor Red
         }
     }
-    catch {
-        Write-Host "[ERRO] Falha ao comparar hash de $($f.Name): $_" -ForegroundColor Red
-    }
 }
-}
+Write-Progress -Activity $msg_progress -Completed
 
 Write-Host ""
 Write-Host "-------------------------------------------"

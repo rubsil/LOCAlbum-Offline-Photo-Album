@@ -121,6 +121,35 @@ function Select-FolderDialog([string]$description, [string]$initialPath = $null)
     }
 }
 
+# --- Mensagens extra (PT/EN) ---
+if ($lang -eq "en") {
+    $msg_dst_inside   = "[ERROR] The backup destination cannot be inside the source folder (or vice versa). Choose another location."
+    $msg_root_label   = "(main folder)"
+    $msg_copy_tag     = "COPY"
+    $msg_act_copy     = "Copying"
+    $msg_act_files    = "Files"
+    $msg_act_scan     = "Comparing files"
+    $msg_word_files   = "files"
+    $msg_word_folders = "folders"
+    $msg_not_found    = "[WARNING] File not found, skipped"
+    $msg_copy_error   = "[ERROR] Failed to copy"
+    $msg_unchanged    = "Folders without changes"
+    $msg_press_enter  = "Press Enter to close..."
+} else {
+    $msg_dst_inside   = "[ERRO] O destino do backup nao pode estar dentro da pasta de origem (nem o contrario). Escolhe outro local."
+    $msg_root_label   = "(pasta principal)"
+    $msg_copy_tag     = "COPIAR"
+    $msg_act_copy     = "A copiar"
+    $msg_act_files    = "Ficheiros"
+    $msg_act_scan     = "A comparar ficheiros"
+    $msg_word_files   = "ficheiros"
+    $msg_word_folders = "pastas"
+    $msg_not_found    = "[AVISO] Ficheiro nao encontrado, ignorado"
+    $msg_copy_error   = "[ERRO] Falha ao copiar"
+    $msg_unchanged    = "Pastas sem alteracoes"
+    $msg_press_enter  = "Pressiona Enter para fechar..."
+}
+
 # --- Selecionar pastas ---
 $defaultSource = Join-Path $root "Fotos"
 $src = Select-FolderDialog $msg_select_source $defaultSource
@@ -132,7 +161,7 @@ if (-not $dst) { Write-Host $msg_cancel; pause; exit }
 # Criar/usar sempre uma pasta raiz dedicada dentro do destino escolhido,
 # para nao largar pastas de anos directamente na raiz do disco/pen/pasta.
 # Se o utilizador ja escolheu a pasta LOCAlbum-Backup directamente, nao duplicar.
-if ([System.IO.Path]::GetFileName($dst) -ne 'LOCAlbum-Backup') {
+if ([System.IO.Path]::GetFileName($dst.TrimEnd('\', '/')) -ne 'LOCAlbum-Backup') {
     $dst = Join-Path $dst "LOCAlbum-Backup"
     if ($lang -eq "en") {
         Write-Host "[INFO] A dedicated backup folder will be used: $dst" -ForegroundColor Cyan
@@ -144,105 +173,109 @@ if ([System.IO.Path]::GetFileName($dst) -ne 'LOCAlbum-Backup') {
     Write-Host ""
 }
 
-# Garantir que destino existe
-if (-not (Test-Path $dst)) {
-    New-Item -ItemType Directory -Path $dst -Force | Out-Null
+# Caminhos completos normalizados, sem barra final (usados para comparar
+# e para calcular o caminho relativo de cada ficheiro)
+$sep     = [System.IO.Path]::DirectorySeparatorChar
+$srcFull = [System.IO.Path]::GetFullPath($src).TrimEnd('\', '/')
+$dstFull = [System.IO.Path]::GetFullPath($dst).TrimEnd('\', '/')
+
+# Proteccao: destino dentro da origem (ou o contrario) faria o backup
+# copiar-se a si proprio e encher o album de pastas estranhas
+$srcCmp = $srcFull + $sep
+$dstCmp = $dstFull + $sep
+if ($dstCmp.StartsWith($srcCmp, [System.StringComparison]::OrdinalIgnoreCase) -or
+    $srcCmp.StartsWith($dstCmp, [System.StringComparison]::OrdinalIgnoreCase)) {
+    Write-Host $msg_dst_inside -ForegroundColor Red
+    pause
+    exit
 }
 
-Write-Host "Origem:  $src"
-Write-Host "Destino: $dst  (subpasta LOCAlbum-Backup criada/usada automaticamente)"
+# Garantir que destino existe
+if (-not (Test-Path -LiteralPath $dstFull)) {
+    [void][System.IO.Directory]::CreateDirectory($dstFull)
+}
+
+Write-Host "Origem:  $srcFull"
+Write-Host "Destino: $dstFull"
 Write-Host ""
 Write-Host $msg_scanning
 Write-Host ""
 
-# --- Carregar ou criar manifest do backup ---
-$manifestPath = Join-Path $dst "_backup_manifest.json"
-$manifest = @{}
-
-if (Test-Path $manifestPath) {
-    try {
-        $json = Get-Content $manifestPath -Raw -Encoding UTF8
-        if ($json) {
-            $manifest = $json | ConvertFrom-Json -AsHashtable
-        }
-    } catch {
-        Write-Host "[AVISO] Manifest corrompido. Sera reconstruido." -ForegroundColor Yellow
-        $manifest = @{}
-    }
+# O manifest antigo ja nao e usado (a comparacao e feita ficheiro a ficheiro).
+# Apagamos o que ficou de versoes anteriores para nao gerar avisos.
+$oldManifest = Join-Path $dstFull "_backup_manifest.json"
+if (Test-Path -LiteralPath $oldManifest) {
+    Remove-Item -LiteralPath $oldManifest -Force -ErrorAction SilentlyContinue
 }
 
-# --- Contadores ---
-$foldersToProcess = 0
-$foldersSkipped = 0
-$filesTotalCopied = 0
-$sizeTotalCopied = 0
 $startTime = Get-Date
 
-# --- Pre-contar pastas/ficheiros a processar ---
-# Comparacao feita ficheiro a ficheiro (tamanho + data de modificacao),
-# nao pela data da pasta — assim o z1.ps1 pode correr sem triggerar backups
-# desnecessarios.
-$years = Get-ChildItem -Path $src -Directory | Sort-Object Name
-$allFoldersToCheck = @()
+# --- Analisar TODOS os ficheiros da origem (incluindo subpastas) ---
+# Inclui fotos sem data, quarentena e qualquer outra subpasta, nao apenas Ano\Mes.
+# Ficheiros ocultos (caches internas do LOCAlbum) ficam de fora.
+# Um ficheiro e copiado se nao existir no destino, ou se o tamanho ou a data
+# de modificacao forem diferentes (tolerancia de 2s; a diferenca de exatamente
+# 1h causada pela mudanca de hora em pens FAT32 tambem e ignorada).
+$allSrcFiles = @(Get-ChildItem -LiteralPath $src -Recurse -File -ErrorAction SilentlyContinue)
+$totalSrc    = $allSrcFiles.Count
 
-foreach ($yearFolder in $years) {
-    $yearName = $yearFolder.Name
-    $months = Get-ChildItem -Path $yearFolder.FullName -Directory | Sort-Object Name
+$groups  = @{}   # pasta relativa -> lista de ficheiros a copiar
+$allDirs = @{}   # todas as pastas relativas com ficheiros (para o resumo)
+$scanIdx = 0
 
-    foreach ($monthFolder in $months) {
-        $monthName = $monthFolder.Name
-        $folderKey = "$yearName/$monthName"
+foreach ($sf in $allSrcFiles) {
+    $scanIdx++
+    if ($totalSrc -gt 0 -and ($scanIdx % 200 -eq 0 -or $scanIdx -eq $totalSrc)) {
+        $pctScan = [int](100 * $scanIdx / $totalSrc)
+        Write-Progress -Id 1 -Activity $msg_act_scan `
+                       -Status "$scanIdx/$totalSrc $msg_word_files ($pctScan%)" `
+                       -PercentComplete $pctScan
+    }
 
-        # Destino correspondente
-        $dstMonthScan = Join-Path $dst (Join-Path $yearName $monthName)
+    $rel    = $sf.FullName.Substring($srcFull.Length).TrimStart('\', '/')
+    $relDir = [System.IO.Path]::GetDirectoryName($rel)
+    if ($null -eq $relDir) { $relDir = "" }
+    $allDirs[$relDir] = $true
 
-        # Verificar ficheiro a ficheiro se ha algo novo ou alterado
-        $srcFiles = Get-ChildItem -Path $monthFolder.FullName -File
-        $filesToCopy = @()
-        foreach ($sf in $srcFiles) {
-            $dfPath = Join-Path $dstMonthScan $sf.Name
-            if (-not (Test-Path $dfPath)) {
-                # Ficheiro novo
-                $filesToCopy += $sf
-            } else {
-                $df = Get-Item $dfPath
-                # Copia se tamanho ou data diferente (tolerancia de 2s para FAT32/exFAT)
-                if ($sf.Length -ne $df.Length -or
-                    [math]::Abs(($sf.LastWriteTimeUtc - $df.LastWriteTimeUtc).TotalSeconds) -gt 2) {
-                    $filesToCopy += $sf
-                }
-            }
-        }
-
-        if ($filesToCopy.Count -gt 0) {
-            $allFoldersToCheck += @{
-                key       = $folderKey
-                year      = $yearName
-                month     = $monthName
-                path      = $monthFolder.FullName
-                files     = $filesToCopy
-            }
+    $dfPath = Join-Path $dstFull $rel
+    $needs  = $false
+    if (-not (Test-Path -LiteralPath $dfPath -PathType Leaf)) {
+        $needs = $true
+    } else {
+        $df   = Get-Item -LiteralPath $dfPath -Force
+        $diff = [math]::Abs(($sf.LastWriteTimeUtc - $df.LastWriteTimeUtc).TotalSeconds)
+        if ($sf.Length -ne $df.Length) {
+            $needs = $true
+        } elseif ($diff -gt 2 -and [math]::Abs($diff - 3600) -gt 2) {
+            $needs = $true
         }
     }
-}
 
-$totalFoldersToProcess = $allFoldersToCheck.Count
-$currentFolderIndex = 0
+    if ($needs) {
+        if (-not $groups.ContainsKey($relDir)) {
+            $groups[$relDir] = New-Object System.Collections.ArrayList
+        }
+        [void]$groups[$relDir].Add($sf)
+    }
+}
+Write-Progress -Id 1 -Activity $msg_act_scan -Completed
+
+$groupKeys        = @($groups.Keys | Sort-Object)
+$totalGroups      = $groupKeys.Count
+$totalFilesToCopy = 0
+$bytesNeeded      = 0
+foreach ($k in $groupKeys) {
+    $totalFilesToCopy += $groups[$k].Count
+    foreach ($f in $groups[$k]) { $bytesNeeded += $f.Length }
+}
 
 # --- Verificar espaco livre no destino ANTES de copiar ---
 # Um backup que fica a meio por falta de espaco e pior do que nenhum:
 # parece ter corrido bem mas deixa fotos por copiar.
-if ($totalFoldersToProcess -gt 0) {
-    $bytesNeeded = 0
-    foreach ($folderInfo in $allFoldersToCheck) {
-        try {
-            $bytesNeeded += ($folderInfo.files | Measure-Object -Property Length -Sum).Sum
-        } catch { }
-    }
-
+if ($totalFilesToCopy -gt 0) {
     $freeBytes = $null
     try {
-        $dstRoot = [System.IO.Path]::GetPathRoot((Resolve-Path $dst).Path)
+        $dstRoot   = [System.IO.Path]::GetPathRoot($dstFull)
         $driveInfo = New-Object System.IO.DriveInfo($dstRoot)
         $freeBytes = $driveInfo.AvailableFreeSpace
     } catch { }
@@ -250,7 +283,7 @@ if ($totalFoldersToProcess -gt 0) {
     $neededMB = [math]::Round($bytesNeeded / 1MB, 1)
     Write-Host ("{0}: {1} MB" -f $msg_space_needed, $neededMB)
 
-    if ($freeBytes -ne $null) {
+    if ($null -ne $freeBytes) {
         $freeMB = [math]::Round($freeBytes / 1MB, 1)
         Write-Host ("{0}: {1} MB" -f $msg_space_free, $freeMB)
         Write-Host ""
@@ -271,116 +304,86 @@ if ($totalFoldersToProcess -gt 0) {
     }
 }
 
-# --- Loop: processar apenas pastas alteradas ---
-foreach ($folderInfo in $allFoldersToCheck) {
-    $currentFolderIndex++
-    $folderKey = $folderInfo.key
-    $yearName = $folderInfo.year
-    $monthName = $folderInfo.month
-    $monthFolderPath = $folderInfo.path
-    $srcLastWrite = $folderInfo.lastWrite
+# --- Copiar apenas ficheiros novos/alterados ---
+$filesTotalCopied = 0
+$sizeTotalCopied  = 0
+$globalIndex      = 0
+$groupIndex       = 0
 
-    $pctFolder = [int](100 * $currentFolderIndex / $totalFoldersToProcess)
-    Write-Host "  [COPIAR $currentFolderIndex/$totalFoldersToProcess - $pctFolder%] $folderKey" -ForegroundColor Yellow
+foreach ($relDir in $groupKeys) {
+    $groupIndex++
+    $items = $groups[$relDir]
+    $n     = $items.Count
+    $label = if ($relDir) { $relDir -replace '\\', '/' } else { $msg_root_label }
 
-    # Criar estrutura de pastas no destino
-    $dstYear = Join-Path $dst $yearName
-    $dstMonth = Join-Path $dstYear $monthName
-    
-    if (-not (Test-Path $dstMonth)) {
-        New-Item -ItemType Directory -Path $dstMonth -Force | Out-Null
+    $pctFolder = [int](100 * $groupIndex / $totalGroups)
+    Write-Host "  [$msg_copy_tag $groupIndex/$totalGroups - $pctFolder%] $label" -ForegroundColor Yellow
+
+    $dstDir = if ($relDir) { Join-Path $dstFull $relDir } else { $dstFull }
+    if (-not (Test-Path -LiteralPath $dstDir)) {
+        [void][System.IO.Directory]::CreateDirectory($dstDir)
     }
 
-    # Usar lista pre-calculada de ficheiros novos/alterados
-    $files = $folderInfo.files
-    $totalFiles = $files.Count
-    $currentFileIndex = 0
+    $fi = 0
+    foreach ($file in $items) {
+        $fi++
+        $globalIndex++
+        $pctFile  = [int](100 * $fi / $n)
+        $pctTotal = [int](100 * $globalIndex / $totalFilesToCopy)
 
-    foreach ($file in $files) {
-        $currentFileIndex++
-        
-        # Barra de progresso dupla
-        $folderPercent = [int](100 * $currentFolderIndex / $totalFoldersToProcess)
-        $filePercent = [int](100 * $currentFileIndex / $totalFiles)
-        
-        $progressMsg = if ($lang -eq "en") { "Copying ($currentFolderIndex/$totalFoldersToProcess pastas)" } 
-                       else { "A copiar ($currentFolderIndex/$totalFoldersToProcess pastas)" }
-        
-        # Barra 1 (pasta): "2024/dezembro | 3/29 pastas (31%)"
-        $statusMsg = "$folderKey | $currentFolderIndex/$totalFoldersToProcess pastas ($folderPercent%)"
-        
-        Write-Progress -Activity $progressMsg `
-                       -Status $statusMsg `
-                       -PercentComplete $folderPercent `
-                       -Id 1
-        
-        # Barra 2 (ficheiro): "291/687 ficheiros (42%)"
-        Write-Progress -Activity "Ficheiros" `
-                       -Status "$currentFileIndex/$totalFiles ficheiros ($pctFile%)" `
-                       -PercentComplete $filePercent `
-                       -ParentId 1 `
-                       -Id 2
+        # Barra 1: progresso TOTAL (todos os ficheiros a copiar)
+        Write-Progress -Id 1 `
+                       -Activity "$msg_act_copy ($globalIndex/$totalFilesToCopy $msg_word_files - $pctTotal%)" `
+                       -Status "$label | $groupIndex/$totalGroups $msg_word_folders" `
+                       -PercentComplete $pctTotal
+        # Barra 2: progresso dentro da pasta actual
+        Write-Progress -Id 2 -ParentId 1 `
+                       -Activity $msg_act_files `
+                       -Status "$fi/$n $msg_word_files ($pctFile%)" `
+                       -PercentComplete $pctFile
 
-        $pctFile = if ($totalFiles -gt 0) { [int](100 * $currentFileIndex / $totalFiles) } else { 100 }
-        Write-Host ("    [{0}/{1} {2}%] {3}" -f $currentFileIndex, $totalFiles, $pctFile, $file.Name)
-        # Verificar se o ficheiro ainda existe antes de copiar
-        # (pode ter sido removido entre o scan e a copia)
-        if (-not (Test-Path $file.FullName)) {
-            Write-Host "    [AVISO] Ficheiro nao encontrado, ignorado: $($file.Name)" -ForegroundColor Yellow
+        Write-Host ("    [{0}/{1} {2}%] {3}" -f $fi, $n, $pctFile, $file.Name)
+
+        # O ficheiro pode ter desaparecido entre a analise e a copia
+        # (ex: disco/pen desligou-se)
+        if (-not (Test-Path -LiteralPath $file.FullName)) {
+            Write-Host "    $msg_not_found`: $($file.Name)" -ForegroundColor Yellow
             continue
         }
         try {
-            $destFile = Join-Path $dstMonth $file.Name
-            Copy-Item -Path $file.FullName -Destination $destFile -Force
+            $destFile = Join-Path $dstDir $file.Name
+            Copy-Item -LiteralPath $file.FullName -Destination $destFile -Force -ErrorAction Stop
             $filesTotalCopied++
             $sizeTotalCopied += $file.Length
         } catch {
-            Write-Host "    [ERRO] Falha ao copiar: $($file.Name): $_" -ForegroundColor Red
+            Write-Host "    $msg_copy_error`: $($file.Name) - $($_.Exception.Message)" -ForegroundColor Red
         }
     }
-
-    # Atualizar timestamp no manifest (referencia; decisao real e feita ficheiro a ficheiro)
-    $manifest[$folderKey] = (Get-Date).ToUniversalTime().ToString("o")
-    
     [System.Console]::Out.Flush()
 }
 
-Write-Progress -Activity "A copiar" -Completed -Id 1
-Write-Progress -Activity "Ficheiros" -Completed -Id 2
+Write-Progress -Id 2 -Activity $msg_act_files -Completed
+Write-Progress -Id 1 -Activity $msg_act_copy -Completed
 
-# Se nao houve nada a copiar
-if ($totalFoldersToProcess -eq 0) {
+if ($totalFilesToCopy -eq 0) {
     Write-Host "  $msg_skipping" -ForegroundColor Green
-    $foldersSkipped = ($years | ForEach-Object { Get-ChildItem -Path $_.FullName -Directory }).Count
 }
 
-# --- Guardar manifest actualizado ---
-$manifest | ConvertTo-Json | Set-Content -Path $manifestPath -Encoding UTF8
-attrib +h "$manifestPath" > $null 2>&1
-
-$endTime = Get-Date
-$elapsed = $endTime - $startTime
+$elapsed        = (Get-Date) - $startTime
+$foldersSkipped = $allDirs.Count - $totalGroups
 
 Write-Host ""
 Write-Host "════════════════════════════════════════"
 Write-Host $msg_summary
 Write-Host "════════════════════════════════════════"
-Write-Host "  $msg_folders_copied`:          $totalFoldersToProcess"
-
-# Contar total de pastas para mostrar quantas nao mudaram
-$allMonthFolders = 0
-foreach ($yearFolder in $years) {
-    $allMonthFolders += (Get-ChildItem -Path $yearFolder.FullName -Directory).Count
-}
-$foldersSkipped = $allMonthFolders - $totalFoldersToProcess
-
-Write-Host "  Pastas sem alteracoes`:        $foldersSkipped"
+Write-Host "  $msg_folders_copied`:          $totalGroups"
+Write-Host "  $msg_unchanged`:        $foldersSkipped"
 Write-Host "  $msg_files_copied`:        $filesTotalCopied"
 Write-Host "  $msg_size_copied`:         $('{0:N0}' -f ($sizeTotalCopied / 1MB)) MB"
-Write-Host "  $msg_time_elapsed`:        $($elapsed.Minutes)m $($elapsed.Seconds)s"
+Write-Host ("  {0}:        {1}h {2}m {3}s" -f $msg_time_elapsed, [int][math]::Floor($elapsed.TotalHours), $elapsed.Minutes, $elapsed.Seconds)
 Write-Host ""
 Write-Host $msg_done -ForegroundColor Green
 Write-Host "════════════════════════════════════════"
 Write-Host ""
-Write-Host "Pressiona Enter para fechar..."
+Write-Host $msg_press_enter
 pause > $null

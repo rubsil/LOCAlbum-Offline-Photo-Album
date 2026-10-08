@@ -193,7 +193,9 @@ else {
 # =================================================
 function Sanitize($val, $def) {
     if ([string]::IsNullOrWhiteSpace($val)) { return $def }
-    return ($val -replace '[:=]+','').Trim()
+    # Remove apenas quebras de linha (que partiriam o config.ini).
+    # Antes removia ':' e '=', o que partia o URL dos donativos (https//...).
+    return ($val -replace '[\r\n]+',' ').Trim()
 }
 
 $cfg['language']     = Sanitize $cfg['language']     'pt'
@@ -315,8 +317,8 @@ function New-Thumbnail {
     )
 
     # Se a thumbnail existe e é mais recente → skip
-    if (Test-Path $ThumbPath) {
-        if ( (Get-Item $ThumbPath).LastWriteTimeUtc.Ticks -ge $SourceTicks ) {
+    if (Test-Path -LiteralPath $ThumbPath) {
+        if ( (Get-Item -LiteralPath $ThumbPath -Force).LastWriteTimeUtc.Ticks -ge $SourceTicks ) {
             return
         }
     }
@@ -397,8 +399,8 @@ function New-VideoThumbnail {
 
     if (-not $ffmpegCmd) { return }
 
-    if (Test-Path $ThumbPath) {
-        if ((Get-Item $ThumbPath).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return }
+    if (Test-Path -LiteralPath $ThumbPath) {
+        if ((Get-Item -LiteralPath $ThumbPath -Force).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return }
     }
 
     try {
@@ -411,14 +413,14 @@ function New-VideoThumbnail {
         & $ffmpegCmd -i "$SourcePath" -ss 00:00:01 -vframes 1 `
             -vf "scale=250:-1" -q:v 3 "$ThumbPath" -y 2>$null
 
-        if (-not (Test-Path $ThumbPath) -or (Get-Item $ThumbPath).Length -lt 512) {
+        if (-not (Test-Path -LiteralPath $ThumbPath) -or (Get-Item -LiteralPath $ThumbPath -Force).Length -lt 512) {
             & $ffmpegCmd -i "$SourcePath" -ss 00:00:00 -vframes 1 `
                 -vf "scale=250:-1" -q:v 3 "$ThumbPath" -y 2>$null
         }
 
         # Se mesmo assim falhar, apaga para não guardar lixo corrompido
-        if ((Test-Path $ThumbPath) -and (Get-Item $ThumbPath).Length -lt 512) {
-            Remove-Item $ThumbPath -Force
+        if ((Test-Path -LiteralPath $ThumbPath) -and (Get-Item -LiteralPath $ThumbPath -Force).Length -lt 512) {
+            Remove-Item -LiteralPath $ThumbPath -Force
         }
     } catch {
         # Falha silenciosa
@@ -490,9 +492,21 @@ $foldersToIgnore = @(
     "_corrompidos-corrupted"
 )
 
-# Contar ficheiros totais para progress bar
-$allFiles = Get-ChildItem -Path $base -Recurse -File
-$totalFiles = $allFiles.Count
+# Contar ficheiros totais (resumo) e os que vao mesmo ser analisados (barra).
+# As pastas congeladas sao saltadas, por isso nao contam para a percentagem;
+# se uma delas tiver de ser re-analisada, os ficheiros sao somados nessa altura.
+$allFiles   = @(Get-ChildItem -Path $base -Recurse -File)
+$totalAll   = $allFiles.Count
+$totalFiles = 0
+foreach ($yDir in @(Get-ChildItem -Path $base -Directory)) {
+    if ($foldersToIgnore -contains $yDir.Name.Trim()) { continue }
+    foreach ($mDir in @(Get-ChildItem -LiteralPath $yDir.FullName -Directory)) {
+        if (-not (Test-Path -LiteralPath (Join-Path $mDir.FullName "_frozen.flag"))) {
+            $totalFiles += @(Get-ChildItem -LiteralPath $mDir.FullName -File).Count
+        }
+    }
+}
+$lastPctZ1  = -1
 $processed  = 0
 $fromCache  = 0
 $recomputed = 0
@@ -511,6 +525,7 @@ Get-ChildItem -Path $base -Directory |
 Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
 
         $monthFolder = $_.Name
+        $monthDir    = $_.FullName
         $manifest[$yearFolder][$monthFolder] = [System.Collections.Generic.List[object]]::new()
         $normMonth = Normalize-Name $monthFolder
 
@@ -518,25 +533,46 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
         $cacheMonth = Join-Path $_.FullName "_cache_mes.json"
 
         # ── PASTA CONGELADA → carregar cache e saltar scan ──
-        if (Test-Path $frozenFlag) {
+        if (Test-Path -LiteralPath $frozenFlag) {
             try {
-                $cached = Get-Content $cacheMonth -Raw -Encoding UTF8 | ConvertFrom-Json
+                $cached = Get-Content -LiteralPath $cacheMonth -Raw -Encoding UTF8 | ConvertFrom-Json
+                $cachedList = [System.Collections.Generic.List[object]]::new()
                 foreach ($entry in $cached) {
-                    $manifest[$yearFolder][$monthFolder].Add([pscustomobject]$entry)
+                    $cachedList.Add([pscustomobject]$entry)
                 }
-                $fromFrozen++
-                Write-Host "  [✓ FROZEN] $yearFolder\$monthFolder" -ForegroundColor Green
-                [System.Console]::Out.Flush()
-                return  # continua para o próximo mês
+
+                # Se as miniaturas desta pasta desapareceram (ex: depois de um Reset),
+                # a cache nao serve: re-analisar para as voltar a criar.
+                $thumbsOk = $true
+                foreach ($entry in $cachedList) {
+                    if ($entry.thumb) {
+                        $thumbCheck = Join-Path $albumRoot (([string]$entry.thumb).Replace('/', [string][System.IO.Path]::DirectorySeparatorChar))
+                        if (-not (Test-Path -LiteralPath $thumbCheck)) { $thumbsOk = $false }
+                        break
+                    }
+                }
+
+                if ($thumbsOk) {
+                    foreach ($entry in $cachedList) {
+                        $manifest[$yearFolder][$monthFolder].Add($entry)
+                    }
+                    $fromFrozen++
+                    Write-Host "  [✓ FROZEN] $yearFolder\$monthFolder" -ForegroundColor Green
+                    [System.Console]::Out.Flush()
+                    return  # continua para o próximo mês
+                }
+                Write-Host "  [INFO] Miniaturas em falta, a recriar: $yearFolder\$monthFolder" -ForegroundColor Yellow
             }
             catch {
                 Write-Host "  [AVISO] Cache corrompida, re-escanear: $monthFolder"
                 # falha → cai no scan normal
             }
+            # Esta pasta vai ser analisada afinal: somar os ficheiros ao total da barra
+            $totalFiles += @(Get-ChildItem -LiteralPath $monthDir -File).Count
         }
 
         # ── SCAN NORMAL ──────────────────────────────────────
-        Get-ChildItem -Path $_.FullName -File | Sort-Object Name | ForEach-Object {
+        Get-ChildItem -LiteralPath $monthDir -File | Sort-Object Name | ForEach-Object {
 
             $file = $_
             $processed++
@@ -550,8 +586,10 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
                 $quarantineReason = "Ficheiro com tamanho de 0 KB (Vazio)"
             } else {
                 $ext = $file.Extension.ToLower()
-                # Testa se o ficheiro é uma imagem e se consegue ser lido sem dar erro
-                if ($ext -in @(".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp")) {
+                # Testa se o ficheiro é uma imagem e se consegue ser lido sem dar erro.
+                # NOTA: .webp NAO entra aqui: o System.Drawing do Windows nao sabe ler
+                # WebP, por isso todas as .webp (validas) iam parar a quarentena.
+                if ($ext -in @(".jpg", ".jpeg", ".png", ".bmp", ".gif")) {
                     try {
                         $testImg = [System.Drawing.Image]::FromFile($file.FullName)
                         $testImg.Dispose()
@@ -585,9 +623,16 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
             # ==================================================================
 
             if ($totalFiles -gt 0) {
-                Write-Progress -Activity $msg_processing `
-                                -Status "$processed / $totalFiles" `
-                                -PercentComplete ([int](100 * $processed / $totalFiles))
+                $pctZ1 = [int][Math]::Min(100, [Math]::Floor(100 * $processed / $totalFiles))
+                # Actualiza a barra so quando a % muda (ou a cada 25 ficheiros):
+                # no PowerShell 5.1 actualizar a cada ficheiro torna tudo mais lento
+                if ($pctZ1 -ne $lastPctZ1 -or ($processed % 25) -eq 0) {
+                    Write-Progress -Activity "$msg_processing ($pctZ1%)" `
+                                    -Status "$processed / $totalFiles ($pctZ1%)" `
+                                    -CurrentOperation $file.Name `
+                                    -PercentComplete $pctZ1
+                    $lastPctZ1 = $pctZ1
+                }
             }
 
             $name      = $file.Name
@@ -728,6 +773,12 @@ $ext = $file.Extension.ToLower()
                 }
             } else {
                 New-Thumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $lastWrite
+                # Imagens que o System.Drawing nao le (ex: .webp): tentar com o ffmpeg
+                if (-not (Test-Path -LiteralPath $thumbFull) -and $ffmpegCmd) {
+                    New-VideoThumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $lastWrite
+                }
+                # Sem miniatura → o album usa a propria imagem (em vez de um icone partido)
+                if (-not (Test-Path -LiteralPath $thumbFull)) { $thumbRel = $null }
             }
 
             $manifest[$yearFolder][$monthFolder].Add([pscustomobject]@{
@@ -748,6 +799,8 @@ $ext = $file.Extension.ToLower()
         attrib +h "$cacheMonth" > $null 2>&1
     }
 }
+
+Write-Progress -Activity $msg_processing -Completed
 
 # =================================================
 # Processar pasta sem data (Fotos Diversas com Divisão Automática)
@@ -823,6 +876,10 @@ if ($noDateFullPath) {
             }
 
             New-Thumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $file.LastWriteTimeUtc.Ticks
+            if (-not (Test-Path -LiteralPath $thumbFull) -and $ffmpegCmd) {
+                New-VideoThumbnail -SourcePath $thumbSource -ThumbPath $thumbFull -SourceTicks $file.LastWriteTimeUtc.Ticks
+            }
+            if (-not (Test-Path -LiteralPath $thumbFull)) { $thumbRel = $null }
         }
 
         $manifest[$specialYear][$specialMonth].Add([pscustomobject]@{
@@ -863,7 +920,7 @@ if (Test-Path $convertedRoot) {
 
 Write-Host ""
 Write-Host "Resumo processamento:" -ForegroundColor Cyan
-Write-Host "  Total de ficheiros:           $totalFiles"
+Write-Host "  Total de ficheiros:           $totalAll"
 Write-Host "  Pastas congeladas (skip):     $fromFrozen"
 Write-Host "  Reutilizados do cache:        $fromCache"
 Write-Host "  Novos/alterados (scan EXIF):  $recomputed"

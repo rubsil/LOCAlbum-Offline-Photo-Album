@@ -163,11 +163,12 @@ echo.
 echo        MAS e se perderes o disco? E se o PC falhar? E se tiveres um acidente?
 echo        Por isso existe a opção [4]: para PROTEGER as tuas fotos e álbum.
 echo.
-echo        Esta opção cria uma cópia INCREMENTAL de TODO o teu álbum:
-echo        ✓ Todas as tuas fotos (Album/Fotos)
-echo        ✓ Miniaturas geradas (Album/Thumbnails)
-echo        ✓ Álbum HTML (Ver album.html)
-echo        ✓ Configurações (config.ini)
+echo        Esta opção cria uma cópia INCREMENTAL de todas as tuas fotos e vídeos:
+echo        ✓ Todas as pastas de Ano/Mês (Album/Fotos)
+echo        ✓ Fotos sem data e pasta de quarentena
+echo        ✓ Qualquer outra subpasta dentro de Album/Fotos
+echo        As miniaturas e o "Ver album.html" não são copiados: recriam-se com a opção [2].
+echo        A cópia fica numa pasta "LOCAlbum-Backup" dentro do destino que escolheres.
 echo.
 echo        Podes guardar num disco externo, pen USB, ou até nuvem local.
 echo.
@@ -251,11 +252,12 @@ echo.
 echo        BUT what if you lose the disk? What if your PC fails? What if disaster strikes?
 echo        That's why option [4] exists: to PROTECT your photos and album.
 echo.
-echo        This option creates an INCREMENTAL copy of your ENTIRE album:
-echo        ✓ All your photos (Album/Fotos)
-echo        ✓ Generated thumbnails (Album/Thumbnails)
-echo        ✓ Album HTML (View album.html)
-echo        ✓ Configuration (config.ini)
+echo        This option creates an INCREMENTAL copy of all your photos and videos:
+echo        ✓ All Year/Month folders (Album/Fotos)
+echo        ✓ Photos without date and the quarantine folder
+echo        ✓ Any other subfolder inside Album/Fotos
+echo        Thumbnails and "View album.html" are not copied: option [2] recreates them.
+echo        The copy goes into a "LOCAlbum-Backup" folder inside the destination you choose.
 echo.
 echo        You can save to an external drive, USB pen, or local cloud storage.
 echo.
@@ -396,7 +398,10 @@ if "%LANG%"=="pt" (
 
     if exist "%ROOT%\Fotos" (
         for /r "%ROOT%\Fotos" %%F in (_frozen.flag _cache_mes.json) do (
-            if exist "%%F" del /f /q "%%F" >nul 2>&1
+            if exist "%%F" (
+                attrib -h "%%F" >nul 2>&1
+                del /f /q "%%F" >nul 2>&1
+            )
         )
     )
 
@@ -436,7 +441,10 @@ if "%LANG%"=="pt" (
 
     if exist "%ROOT%\Fotos" (
         for /r "%ROOT%\Fotos" %%F in (_frozen.flag _cache_mes.json) do (
-            if exist "%%F" del /f /q "%%F" >nul 2>&1
+            if exist "%%F" (
+                attrib -h "%%F" >nul 2>&1
+                del /f /q "%%F" >nul 2>&1
+            )
         )
     )
 
