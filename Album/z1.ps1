@@ -198,6 +198,21 @@ function Sanitize($val, $def) {
     return ($val -replace '[\r\n]+',' ').Trim()
 }
 
+# =================================================
+# Gravar ficheiros OCULTOS (caches do LOCAlbum)
+# =================================================
+# Regra do proprio Windows: substituir um ficheiro oculto com Set-Content /
+# WriteAllText falha com "Acesso negado". Antes, isto fazia com que as caches
+# nunca fossem actualizadas depois da primeira vez. Aqui tira-se primeiro o
+# atributo oculto, grava-se, e volta-se a ocultar.
+function Write-HiddenFile([string]$Path, [string]$Text) {
+    if (Test-Path -LiteralPath $Path) {
+        try { [System.IO.File]::SetAttributes($Path, [System.IO.FileAttributes]::Normal) } catch { }
+    }
+    [System.IO.File]::WriteAllText($Path, [string]$Text, (New-Object System.Text.UTF8Encoding($true)))
+    try { [System.IO.File]::SetAttributes($Path, [System.IO.FileAttributes]::Hidden) } catch { }
+}
+
 $cfg['language']     = Sanitize $cfg['language']     'pt'
 $cfg['display_name'] = Sanitize $cfg['display_name'] 'Memórias'
 $cfg['page_title']   = Sanitize $cfg['page_title']   'LOCALBUM - Offline Photo Album'
@@ -552,7 +567,22 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
                     }
                 }
 
-                if ($thumbsOk) {
+                # A pasta mudou desde que foi congelada? (fotos acrescentadas,
+                # apagadas ou renomeadas a mao no Explorador). Duas verificacoes
+                # rapidas, sem abrir nenhuma foto:
+                #  - o numero de ficheiros e diferente do que esta na cache;
+                #  - a pasta foi modificada depois de ter sido congelada.
+                $changed = $false
+                $visibleNow = @(Get-ChildItem -LiteralPath $monthDir -File).Count
+                if ($visibleNow -ne $cachedList.Count) {
+                    $changed = $true
+                } else {
+                    $flagTime = (Get-Item -LiteralPath $frozenFlag -Force).LastWriteTimeUtc
+                    $dirTime  = (Get-Item -LiteralPath $monthDir -Force).LastWriteTimeUtc
+                    if ($dirTime -gt $flagTime.AddSeconds(5)) { $changed = $true }
+                }
+
+                if ($thumbsOk -and -not $changed) {
                     foreach ($entry in $cachedList) {
                         $manifest[$yearFolder][$monthFolder].Add($entry)
                     }
@@ -561,7 +591,11 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
                     [System.Console]::Out.Flush()
                     return  # continua para o próximo mês
                 }
-                Write-Host "  [INFO] Miniaturas em falta, a recriar: $yearFolder\$monthFolder" -ForegroundColor Yellow
+                if ($changed) {
+                    Write-Host "  [INFO] Pasta alterada desde a ultima vez, a re-analisar: $yearFolder\$monthFolder" -ForegroundColor Yellow
+                } else {
+                    Write-Host "  [INFO] Miniaturas em falta, a recriar: $yearFolder\$monthFolder" -ForegroundColor Yellow
+                }
             }
             catch {
                 Write-Host "  [AVISO] Cache corrompida, re-escanear: $monthFolder"
@@ -765,9 +799,16 @@ $ext = $file.Extension.ToLower()
             }
 
             if ($ext -in ".mp4", ".mov", ".webm", ".mkv", ".avi", ".mts", ".m2ts", ".3gp", ".hevc") {
+                # Os videos tem miniatura propria, com a extensao no nome
+                # (IMG_1234.MOV -> IMG_1234.MOV.jpg). Sem isto, nas Live Photos do
+                # iPhone (IMG_1234.HEIC + IMG_1234.MOV) o video ficava com a
+                # miniatura da foto, porque ambos davam "IMG_1234.jpg".
+                $thumbName = $name + ".jpg"
+                $thumbFull = Join-Path $thumbDir $thumbName
+                $thumbRel  = "Album/Thumbnails/$yearFolder/$normMonth/$thumbName"
                 if ($ffmpegCmd) {
                     New-VideoThumbnail -SourcePath $file.FullName -ThumbPath $thumbFull -SourceTicks $lastWrite
-                    if (-not (Test-Path $thumbFull)) { $thumbRel = $null }
+                    if (-not (Test-Path -LiteralPath $thumbFull)) { $thumbRel = $null }
                 } else {
                     $thumbRel = $null
                 }
@@ -790,13 +831,10 @@ $ext = $file.Extension.ToLower()
         }
 
         # ── GUARDAR CACHE DO MÊS E CONGELAR ─────────────────
-        $manifest[$yearFolder][$monthFolder] |
-            ConvertTo-Json -Depth 5 |
-            Set-Content -Path $cacheMonth -Encoding UTF8
-
-        [System.IO.File]::WriteAllText($frozenFlag, "")
-        attrib +h "$frozenFlag" > $null 2>&1
-        attrib +h "$cacheMonth" > $null 2>&1
+        # (a cache e gravada ANTES da flag, para a flag ficar sempre mais recente)
+        $monthJson = [string]($manifest[$yearFolder][$monthFolder] | ConvertTo-Json -Depth 5)
+        Write-HiddenFile $cacheMonth $monthJson
+        Write-HiddenFile $frozenFlag ""
     }
 }
 
@@ -902,11 +940,8 @@ foreach ($k in $cache.Keys) {
     $cacheArray += $cache[$k]
 }
 
-$cacheArray | ConvertTo-Json -Depth 5 |
-    Set-Content -Path $cachePath -Encoding UTF8
-
-# Tornar cache invisível
-attrib +h "$cachePath" > $null 2>&1
+# (Write-HiddenFile tambem a deixa oculta)
+Write-HiddenFile $cachePath ([string]($cacheArray | ConvertTo-Json -Depth 5))
 
 # Tornar a pasta Thumbnails invisível também
 if (Test-Path $thumbRoot) {

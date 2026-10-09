@@ -38,6 +38,7 @@ echo 🌍 Escolhe o idioma / Choose language:
 echo [1] PT  → Português
 echo [2] EN  → English
 echo.
+set "LANG_CHOICE="
 set /p LANG_CHOICE="Seleciona uma opção / Choose (1 / 2): "
 if "%LANG_CHOICE%"=="2" (
     set "LANG=en"
@@ -69,6 +70,7 @@ echo [i] Informações / Ajuda             - (explicações gerais)
 echo [0] Sair
 echo.
 echo =====================================================
+set "op="
 set /p op="Escolhe uma opção: "
 
 if /i "%op%"=="1" goto ORGANIZE
@@ -96,6 +98,7 @@ echo [i] Information / Help            - (how it all works)
 echo [0] Exit
 echo.
 echo =====================================================
+set "op="
 set /p op="Choose an option: "
 
 if /i "%op%"=="1" goto ORGANIZE
@@ -146,6 +149,10 @@ echo          responda a duas perguntas para criar automaticamente o álbum.
 echo        - Depois da primeira utilização, sempre que adicionar mais fotos em Album\Fotos,
 echo          deve correr novamente esta opção para que o LOCALBUM detete as novas fotos e atualize
 echo          o ficheiro "Ver album.html". Por isso, esta opção faz as duas funções (Atualizar e Criar).
+echo        - Ao correr, escolhes o modo:
+echo            [A] Rápida   - analisa só as pastas que mudaram. Deteta sozinha fotos novas,
+echo                           apagadas ou renomeadas, mesmo que mexas à mão no Explorador. Usa sempre esta.
+echo            [B] Completa - volta a analisar todas as fotos. Só é preciso se algo parecer errado no álbum.
 echo.
 echo ► [3] REPOR / RESETAR O ÁLBUM
 echo        - Apaga os ficheiros HTML antigos e a configuração criada pela opção [2].
@@ -235,6 +242,10 @@ echo          to automatically generate your personalized album.
 echo        - After the first creation, whenever you add more photos to Album\Fotos, you must
 echo          run this option again so LOCALBUM detects the new photos and updates the album.
 echo          That’s why this option performs both functions (Create + Update).
+echo        - When you run it, you choose the mode:
+echo            [A] Quick - only analyses the folders that changed. It detects new, deleted or
+echo                        renamed photos by itself, even if you change them by hand. Always use this one.
+echo            [B] Full  - analyses all photos again. Only needed if something looks wrong in the album.
 echo.
 echo ► [3] RESET ALBUM
 echo        - Deletes old HTML files and configuration created by option [2].
@@ -329,17 +340,18 @@ if not exist "%ROOT%\z1.ps1" (
 if "%LANG%"=="pt" (
     echo Como queres atualizar o album?
     echo.
-    echo [A] Pagina Rapida        - usa o cache de pastas ^(opcao recomendada se usaste sempre a opcao [1]^)
-    echo [B] Atualizacao completa - volta a fazer scan a tudo ^(uso manual no Explorer^)
+    echo [A] Rapida   - deteta sozinha as pastas alteradas ^(recomendado, Enter^)
+    echo [B] Completa - volta a analisar tudo ^(so se algo parecer errado no album^)
     echo.
 ) else (
     echo How do you want to update the album?
     echo.
-    echo [A] Quick update - uses folder cache ^(recommended if you always used option [1]^)
-    echo [B] Full update  - rescans everything ^(use if you added photos manually^)
+    echo [A] Quick - detects changed folders by itself ^(recommended, Enter^)
+    echo [B] Full  - rescans everything ^(only if something looks wrong in the album^)
     echo.
 )
 
+set "UPDATE_MODE="
 set /p UPDATE_MODE="[A/B]: "
 
 if /i "!UPDATE_MODE!"=="B" (

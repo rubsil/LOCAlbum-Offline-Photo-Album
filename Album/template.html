@@ -848,6 +848,11 @@ function ageStr(iso){
   return `${y} year${y!==1?'s':''} and ${m} month${m!==1?'s':''}`;
 }
 
+// Codifica cada parte do caminho (pasta/ficheiro) separadamente.
+// O encodeURI deixa '#' e '?' por codificar, e um ficheiro como "Festa #2.jpg"
+// deixava de abrir no visualizador grande.
+function encPath(p){ return String(p||'').split('/').map(encodeURIComponent).join('/'); }
+
 const VIDEO_EXTS = [
     "mp4", "mov", "webm", "mkv", "avi", "mts", "m2ts", "3gp", "hevc", "mpg", "mpeg", "m4v"
 ];
@@ -1238,18 +1243,27 @@ function show(i){
   if(ph) ph.style.display='none';
   const bgBlurEl = document.getElementById('stageBgBlur');
     if (bgBlurEl) {
-     bgBlurEl.style.backgroundImage = `url("${encodeURI(it.thumb || it.src)}")`;
+     bgBlurEl.style.backgroundImage = `url("${encPath(it.thumb || it.src)}")`;
   }
   const ext=it.name.split('.').pop().toLowerCase();
   const isVideo = VIDEO_EXTS.includes(ext);
   const el = isVideo ? document.createElement('video') : document.createElement('img');
-  el.src = encodeURI(it.src);
+  el.src = encPath(it.src);
   if(el.tagName==='VIDEO'){
     const wasRunning=!!timer; if(wasRunning) stopSS();
     el.controls=true; el.playsInline=true; el.preload="metadata"; el.muted=false; el.autoplay=true;
     el.onended=()=>{
       if(wasRunning){
         setTimeout(()=>startSS(), 300);
+      }
+    };
+    // Se o browser nao conseguir reproduzir o video (formato nao suportado,
+    // ex: alguns .MOV do iPhone), a apresentacao salta para o seguinte
+    // em vez de ficar parada aqui para sempre.
+    const myIdx = curIdx;
+    el.onerror=()=>{
+      if(wasRunning && curIdx===myIdx && el.isConnected){
+        setTimeout(()=>{ if(curIdx===myIdx && !timer){ startSS(); nextGlobal(); } }, 1000);
       }
     };
   }
@@ -1277,8 +1291,8 @@ if(activeThumbEl) activeThumbEl.classList.remove('active');
   const preloadByItem=(item)=>{
     if(!item) return;
     const ext=item.name.split('.').pop().toLowerCase();
-    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src = encodeURI(item.src); v.preload="metadata"; }
-    else { const img=new Image(); img.src=encodeURI(item.src); }
+    if (VIDEO_EXTS.includes(ext)) {const v=document.createElement('video'); v.src = encPath(item.src); v.preload="metadata"; }
+    else { const img=new Image(); img.src=encPath(item.src); }
   };
   if(currentMonthList.length){
     const pIdx = currentMonthList.findIndex(x=>x.name===it.name);
