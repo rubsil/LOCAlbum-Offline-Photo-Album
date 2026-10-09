@@ -38,8 +38,8 @@ Write-Host ""
 # Tiny INI Reader + criação interactiva (versão antiga)
 # =================================================
 $cfg = @{}
-if (Test-Path $iniPath) {
-    Get-Content $iniPath -Encoding UTF8 | ForEach-Object {
+if (Test-Path -LiteralPath $iniPath) {
+    Get-Content -LiteralPath $iniPath -Encoding UTF8 | ForEach-Object {
         $line = $_.Trim()
         if ($line -match '^\s*#') { return }
         if ($line -match '^\[')   { return }
@@ -80,7 +80,7 @@ else {
 
         # Show example screenshot (help)
         $screenshot = Join-Path $root "ajuda_album.png"
-        if (Test-Path $screenshot) {
+        if (Test-Path -LiteralPath $screenshot) {
             try {
                 Add-Type -AssemblyName System.Windows.Forms
                 Add-Type -AssemblyName System.Drawing
@@ -132,7 +132,7 @@ else {
 
         # Mostrar screenshot explicativo
         $screenshot = Join-Path $root "ajuda_album.png"
-        if (Test-Path $screenshot) {
+        if (Test-Path -LiteralPath $screenshot) {
             try {
                 Add-Type -AssemblyName System.Windows.Forms
                 Add-Type -AssemblyName System.Drawing
@@ -180,7 +180,7 @@ else {
     # Gravar config.ini e ocultar
     $lines = @()
     foreach ($k in $cfg.Keys) { $lines += "$k=$($cfg[$k])" }
-    Set-Content -Path $iniPath -Value $lines -Encoding UTF8
+    Set-Content -LiteralPath $iniPath -Value $lines -Encoding UTF8
     attrib +h "$iniPath" > $null 2>&1
     Write-Host ""
     Write-Host "Ficheiro config.ini guardado e ocultado em:"
@@ -228,11 +228,11 @@ $cfg['project_name'] = Sanitize $cfg['project_name'] 'LOCALBUM - Offline Photo A
 # =================================================
 $exiftoolFilesDir = Join-Path $root "exiftool_files"
 $exiftoolZip      = Join-Path $root "exiftool_files.zip"
-if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
+if ((Test-Path -LiteralPath $exiftoolZip) -and (-not (Test-Path -LiteralPath $exiftoolFilesDir))) {
     # A pasta exiftool_files pode vir compactada num único .zip (o GitHub Web UI
     # não permite enviar de uma vez uma pasta com muitos ficheiros pequenos)
     try {
-        Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force
+        Expand-Archive -LiteralPath $exiftoolZip -DestinationPath $root -Force
         # Esconde-a já, sem esperar pelo próximo arranque do .bat (que só
         # esconde ficheiros que já existiam no início da sessão)
         attrib +h "$exiftoolFilesDir" > $null 2>&1
@@ -241,7 +241,7 @@ if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
 
 $exiftoolExe = $null
 $exiftoolLocal = Join-Path $root "exiftool.exe"
-if (Test-Path $exiftoolLocal) {
+if (Test-Path -LiteralPath $exiftoolLocal) {
     try {
         $verOutput = & $exiftoolLocal -ver 2>$null
         if ($verOutput -match '^\d') { $exiftoolExe = $exiftoolLocal }
@@ -262,7 +262,7 @@ if ($exiftoolExe) {
 # =================================================
 $ffmpegCmd = $null
 $ffmpegLocal = Join-Path $root "ffmpeg.exe"
-if (Test-Path $ffmpegLocal) {
+if (Test-Path -LiteralPath $ffmpegLocal) {
     $ffmpegCmd = $ffmpegLocal
     Write-Host "[OK] ffmpeg.exe encontrado na pasta Album" -ForegroundColor Green
 } else {
@@ -304,9 +304,9 @@ if ($cfg['language'] -eq 'en') {
 # Carregar cache incremental
 # =================================================
 $cache = @{}
-if (Test-Path $cachePath) {
+if (Test-Path -LiteralPath $cachePath) {
     try {
-        $json = Get-Content $cachePath -Raw -Encoding UTF8
+        $json = Get-Content -LiteralPath $cachePath -Raw -Encoding UTF8
         if ($json) {
             ($json | ConvertFrom-Json) | ForEach-Object {
                 if ($_.key) { $cache[$_.key] = $_ }
@@ -341,7 +341,7 @@ function New-Thumbnail {
     try {
         # Criar pasta se não existir
         $dir = Split-Path $ThumbPath -Parent
-        if (-not (Test-Path $dir)) {
+        if (-not (Test-Path -LiteralPath $dir)) {
             New-Item -ItemType Directory -Path $dir -Force | Out-Null
         }
 
@@ -420,7 +420,7 @@ function New-VideoThumbnail {
 
     try {
         $dir = Split-Path $ThumbPath -Parent
-        if (-not (Test-Path $dir)) {
+        if (-not (Test-Path -LiteralPath $dir)) {
             New-Item -ItemType Directory -Path $dir -Force | Out-Null
         }
 
@@ -458,26 +458,26 @@ function Convert-HeicToJpg {
 
     if (-not $ffmpegCmd) { return $false }
 
-    if (Test-Path $JpgPath) {
-        if ((Get-Item $JpgPath).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return $true }
+    if (Test-Path -LiteralPath $JpgPath) {
+        if ((Get-Item -LiteralPath $JpgPath).LastWriteTimeUtc.Ticks -ge $SourceTicks) { return $true }
     }
 
     try {
         $dir = Split-Path $JpgPath -Parent
-        if (-not (Test-Path $dir)) {
+        if (-not (Test-Path -LiteralPath $dir)) {
             New-Item -ItemType Directory -Path $dir -Force | Out-Null
         }
 
         & $ffmpegCmd -i "$SourcePath" -q:v 3 "$JpgPath" -y 2>$null
 
-        if ((Test-Path $JpgPath) -and (Get-Item $JpgPath).Length -ge 512) {
+        if ((Test-Path -LiteralPath $JpgPath) -and (Get-Item -LiteralPath $JpgPath).Length -ge 512) {
             return $true
         } else {
-            if (Test-Path $JpgPath) { Remove-Item $JpgPath -Force }
+            if (Test-Path -LiteralPath $JpgPath) { Remove-Item -LiteralPath $JpgPath -Force }
             return $false
         }
     } catch {
-        if (Test-Path $JpgPath) { Remove-Item $JpgPath -Force }
+        if (Test-Path -LiteralPath $JpgPath) { Remove-Item -LiteralPath $JpgPath -Force }
         return $false
     }
 }
@@ -496,7 +496,7 @@ function Normalize-Name($name) {
 # =================================================
 $manifest = @{}
 
-if (-not (Test-Path $base)) {
+if (-not (Test-Path -LiteralPath $base)) {
     New-Item -ItemType Directory -Path $base | Out-Null
 }
 
@@ -510,10 +510,10 @@ $foldersToIgnore = @(
 # Contar ficheiros totais (resumo) e os que vao mesmo ser analisados (barra).
 # As pastas congeladas sao saltadas, por isso nao contam para a percentagem;
 # se uma delas tiver de ser re-analisada, os ficheiros sao somados nessa altura.
-$allFiles   = @(Get-ChildItem -Path $base -Recurse -File)
+$allFiles   = @(Get-ChildItem -LiteralPath $base -Recurse -File)
 $totalAll   = $allFiles.Count
 $totalFiles = 0
-foreach ($yDir in @(Get-ChildItem -Path $base -Directory)) {
+foreach ($yDir in @(Get-ChildItem -LiteralPath $base -Directory)) {
     if ($foldersToIgnore -contains $yDir.Name.Trim()) { continue }
     foreach ($mDir in @(Get-ChildItem -LiteralPath $yDir.FullName -Directory)) {
         if (-not (Test-Path -LiteralPath (Join-Path $mDir.FullName "_frozen.flag"))) {
@@ -528,7 +528,7 @@ $recomputed = 0
 $fromFrozen = 0
 
 # Loop: ano → mês → ficheiros
-Get-ChildItem -Path $base -Directory |
+Get-ChildItem -LiteralPath $base -Directory |
     Where-Object { $foldersToIgnore -notcontains $_.Name.Trim() } |
     Sort-Object Name | ForEach-Object {
 
@@ -537,7 +537,7 @@ Get-ChildItem -Path $base -Directory |
         $manifest[$yearFolder] = @{}
     }
 
-Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
+Get-ChildItem -LiteralPath $_.FullName -Directory | Sort-Object Name | ForEach-Object {
 
         $monthFolder = $_.Name
         $monthDir    = $_.FullName
@@ -570,13 +570,22 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
                 # A pasta mudou desde que foi congelada? (fotos acrescentadas,
                 # apagadas ou renomeadas a mao no Explorador). Duas verificacoes
                 # rapidas, sem abrir nenhuma foto:
-                #  - o numero de ficheiros e diferente do que esta na cache;
+                #  - o numero de ficheiros ou os nomes sao diferentes dos da cache;
                 #  - a pasta foi modificada depois de ter sido congelada.
                 $changed = $false
-                $visibleNow = @(Get-ChildItem -LiteralPath $monthDir -File).Count
-                if ($visibleNow -ne $cachedList.Count) {
+                $filesNow = @(Get-ChildItem -LiteralPath $monthDir -File)
+                if ($filesNow.Count -ne $cachedList.Count) {
                     $changed = $true
                 } else {
+                    # Mesmos nomes? (apanha renomeacoes mesmo em pens/discos exFAT/FAT32,
+                    # onde a data da pasta pode nao mudar quando se renomeia um ficheiro)
+                    $cachedNames = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+                    foreach ($entry in $cachedList) { [void]$cachedNames.Add([string]$entry.name) }
+                    foreach ($fn in $filesNow) {
+                        if (-not $cachedNames.Contains($fn.Name)) { $changed = $true; break }
+                    }
+                }
+                if (-not $changed) {
                     $flagTime = (Get-Item -LiteralPath $frozenFlag -Force).LastWriteTimeUtc
                     $dirTime  = (Get-Item -LiteralPath $monthDir -Force).LastWriteTimeUtc
                     if ($dirTime -gt $flagTime.AddSeconds(5)) { $changed = $true }
@@ -636,18 +645,18 @@ Get-ChildItem -Path $_.FullName -Directory | Sort-Object Name | ForEach-Object {
 
             if ($isCorrupted) {
                 $quarantineDir = Join-Path $base "_corrompidos-corrupted"
-                if (-not (Test-Path $quarantineDir)) {
+                if (-not (Test-Path -LiteralPath $quarantineDir)) {
                     New-Item -ItemType Directory -Path $quarantineDir -Force | Out-Null
                 }
                 $destPath = Join-Path $quarantineDir $file.Name
                 # Se já existir um ficheiro com o mesmo nome na quarentena, gera um nome único
-                if (Test-Path $destPath) {
+                if (Test-Path -LiteralPath $destPath) {
                     $destPath = Join-Path $quarantineDir "$([IO.Path]::GetFileNameWithoutExtension($file.Name))_$([Guid]::NewGuid().ToString().Substring(0,8))$($file.Extension)"
                 }
                 try {
-                    Move-Item -Path $file.FullName -Destination $destPath -Force
+                    Move-Item -LiteralPath $file.FullName -Destination $destPath -Force
                     $logFile = Join-Path $quarantineDir "erros_leitura.txt"
-                    "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Movido: $($file.FullName) -> Motivo: $quarantineReason" | Out-File -FilePath $logFile -Append -Encoding utf8
+                    "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Movido: $($file.FullName) -> Motivo: $quarantineReason" | Out-File -LiteralPath $logFile -Append -Encoding utf8
                     Write-Host "  [QUARENTENA] Ficheiro corrompido movido: $($file.Name) ($quarantineReason)" -ForegroundColor Yellow
                 } catch {
                     Write-Host "  [ERRO] Falha ao mover o ficheiro corrompido: $($file.Name)" -ForegroundColor Red
@@ -849,7 +858,7 @@ $noDateFullPath = $null
 
 foreach ($ndName in @($noDatePT, $noDateEN)) {
     $p = Join-Path $base $ndName
-    if (Test-Path $p) { $noDateFullPath = $p; break }
+    if (Test-Path -LiteralPath $p) { $noDateFullPath = $p; break }
 }
 
 if ($noDateFullPath) {
@@ -859,7 +868,7 @@ if ($noDateFullPath) {
     }
 
     # 1. Obter todos os ficheiros da pasta sem data
-    $noDateFiles = Get-ChildItem -Path $noDateFullPath -File | Sort-Object Name
+    $noDateFiles = Get-ChildItem -LiteralPath $noDateFullPath -File | Sort-Object Name
     
     # --- CONFIGURAÇÃO DO LIMITE ---
     $photoLimit  = 500  # <--- Altera aqui o limite de fotos por bloco (500 é o ideal para performance)
@@ -944,12 +953,12 @@ foreach ($k in $cache.Keys) {
 Write-HiddenFile $cachePath ([string]($cacheArray | ConvertTo-Json -Depth 5))
 
 # Tornar a pasta Thumbnails invisível também
-if (Test-Path $thumbRoot) {
+if (Test-Path -LiteralPath $thumbRoot) {
     attrib +h "$thumbRoot" > $null 2>&1
 }
 
 # Tornar a pasta Converted invisível também (cópias JPG dos HEIC)
-if (Test-Path $convertedRoot) {
+if (Test-Path -LiteralPath $convertedRoot) {
     attrib +h "$convertedRoot" > $null 2>&1
 }
 
@@ -965,7 +974,7 @@ Write-Host ""
 # INJETAR CONFIG + MANIFEST NO TEMPLATE.HTML
 # =================================================
 
-if (-not (Test-Path $templatePath)) {
+if (-not (Test-Path -LiteralPath $templatePath)) {
     Write-Host "ERRO: template.html NÃO encontrado em:"
     Write-Host "  $templatePath"
     pause
@@ -988,7 +997,7 @@ $CONFIG   = "const CONFIG = "   + (ConvertTo-Json $configObj -Compress) + ";"
 $MANIFEST = "const manifest = " + (ConvertTo-Json $manifest -Depth 6 -Compress) + ";"
 
 # Ler template
-$template  = Get-Content -Raw $templatePath -Encoding UTF8
+$template  = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
 
 # Inject
 $htmlFinal = $template.Replace('<!--CONFIG-->', $CONFIG).Replace('<!--MANIFEST-->', $MANIFEST)
@@ -1001,7 +1010,7 @@ $htmlFinal = $htmlFinal -replace '(<title>LOCAlbum - Offline Photo Album</title>
                            "`$1`r`n  $favicon"
 
 # Escrever ficheiro final
-Set-Content -Path $out -Value $htmlFinal -Encoding UTF8
+Set-Content -LiteralPath $out -Value $htmlFinal -Encoding UTF8
 
 Write-Host ""
 Write-Host $msg_cache_saved

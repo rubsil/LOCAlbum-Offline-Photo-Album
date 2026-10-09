@@ -1,6 +1,20 @@
 @echo off
 chcp 65001 >nul
 title LOCALBUM Manager - Offline Photo Album
+
+:: =====================================================
+::  VERIFICAR O CAMINHO DA PASTA (antes de tudo)
+:: =====================================================
+:: O Windows PowerShell nao consegue arrancar scripts a partir de uma pasta
+:: cujo caminho tenha [ ou ] (trata-os como caracteres especiais), e o !
+:: estraga este .bat. Em vez de falhar sem explicacao, avisa-se logo.
+set "LB_CHECK=%~dp0"
+set "LB_BAD="
+if not "%LB_CHECK:[=%"=="%LB_CHECK%" set "LB_BAD=1"
+if not "%LB_CHECK:]=%"=="%LB_CHECK%" set "LB_BAD=1"
+if not "%LB_CHECK:!=%"=="%LB_CHECK%" set "LB_BAD=1"
+if defined LB_BAD goto BAD_PATH
+
 setlocal EnableDelayedExpansion EnableExtensions
 
 :: =====================================================
@@ -320,7 +334,7 @@ if not exist "%ROOT%\z3.ps1" (
     pause
     if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
-"%PWSH%" -ExecutionPolicy Bypass -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '%ROOT%\z3.ps1' -lang '%LANG%'"
+"%PWSH%" -ExecutionPolicy Bypass -NoProfile -File "%ROOT%\z3.ps1" -lang %LANG%
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 
 
@@ -486,5 +500,29 @@ if not exist "%ROOT%\z-backup.ps1" (
     pause
     if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
-"%PWSH%" -ExecutionPolicy Bypass -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '%ROOT%\z-backup.ps1' -lang '%LANG%'"
+"%PWSH%" -ExecutionPolicy Bypass -NoProfile -File "%ROOT%\z-backup.ps1" -lang %LANG%
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
+
+
+:: =====================================================
+::  CAMINHO NAO SUPORTADO (tem [ ] ou !)
+:: =====================================================
+:BAD_PATH
+echo.
+echo =====================================================
+echo  [ERRO] Pasta nao suportada / Unsupported folder
+echo =====================================================
+echo.
+echo  O LOCALBUM esta numa pasta cujo caminho tem [ ] ou ! :
+echo    "%LB_CHECK%"
+echo  O Windows PowerShell nao consegue correr os scripts a partir daqui.
+echo  Muda o nome da pasta - ou das pastas acima - para tirar esses
+echo  caracteres, e abre este ficheiro outra vez. As fotos nao sao afetadas.
+echo.
+echo  LOCALBUM is in a folder whose path contains [ ] or ! :
+echo  Windows PowerShell cannot run the scripts from here.
+echo  Rename the folder - or the folders above it - to remove those
+echo  characters, and open this file again. Your photos are not affected.
+echo.
+pause
+exit /b

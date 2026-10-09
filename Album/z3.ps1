@@ -31,9 +31,9 @@ $iniPath = Join-Path $root "config.ini"
 # -------------------------------
 if (-not $lang) { $lang = "pt" }
 
-if (Test-Path $iniPath) {
+if (Test-Path -LiteralPath $iniPath) {
     try {
-        $cfg = Get-Content $iniPath -Encoding UTF8 | Where-Object {$_ -match "="}
+        $cfg = Get-Content -LiteralPath $iniPath -Encoding UTF8 | Where-Object {$_ -match "="}
         foreach ($line in $cfg) {
             $kv = $line -split "=", 2
             if ($kv[0].Trim().ToLower() -eq "language" -and -not $lang) {
@@ -79,11 +79,11 @@ Write-Host "-------------------------------------------"
 # Por isso testamos se realmente funciona (-ver), não só se o ficheiro existe.
 $exiftoolFilesDir = Join-Path $root "exiftool_files"
 $exiftoolZip      = Join-Path $root "exiftool_files.zip"
-if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
+if ((Test-Path -LiteralPath $exiftoolZip) -and (-not (Test-Path -LiteralPath $exiftoolFilesDir))) {
     # A pasta exiftool_files pode vir compactada num único .zip (o GitHub Web UI
     # não permite enviar de uma vez uma pasta com muitos ficheiros pequenos)
     try {
-        Expand-Archive -Path $exiftoolZip -DestinationPath $root -Force
+        Expand-Archive -LiteralPath $exiftoolZip -DestinationPath $root -Force
         # Esconde-a já, sem esperar pelo próximo arranque do .bat (que só
         # esconde ficheiros que já existiam no início da sessão)
         attrib +h "$exiftoolFilesDir" > $null 2>&1
@@ -91,7 +91,7 @@ if ((Test-Path $exiftoolZip) -and (-not (Test-Path $exiftoolFilesDir))) {
 }
 
 $exiftoolLocal = Join-Path $root "exiftool.exe"
-if (Test-Path $exiftoolLocal) {
+if (Test-Path -LiteralPath $exiftoolLocal) {
     $env:PATH = "$root;$env:PATH"  # garante que o script o encontra
 }
 
@@ -130,8 +130,8 @@ function Select-FolderDialog([string]$description,[string]$initialPath=$null){
     $d = New-Object System.Windows.Forms.FolderBrowserDialog
     $d.Description = $description
     $d.ShowNewFolderButton = $true
-    if($initialPath -and (Test-Path $initialPath)){
-        try { $d.SelectedPath = (Resolve-Path $initialPath) } catch {}
+    if($initialPath -and (Test-Path -LiteralPath $initialPath)){
+        try { $d.SelectedPath = (Resolve-Path -LiteralPath $initialPath) } catch {}
     }
 
     $top = New-Object System.Windows.Forms.Form
@@ -261,8 +261,13 @@ catch {}
 # -------------------------------
 # Processar ficheiros
 # -------------------------------
-$files = Get-ChildItem -Path $src -Include *.jpg,*.jpeg,*.png,*.gif,*.webp,*.tif,*.tiff,*.heic,*.heif,
-        *.mp4,*.mov,*.webm,*.mkv,*.avi,*.mts,*.m2ts,*.3gp,*.hevc -Recurse
+# -LiteralPath + filtro pela extensao: funciona mesmo que a pasta de origem
+# tenha [ ] no nome (com -Path/-Include, o PowerShell tratava-os como padrao
+# de pesquisa e nao encontrava nenhuma foto).
+$mediaExts = @('.jpg','.jpeg','.png','.gif','.webp','.tif','.tiff','.heic','.heif',
+               '.mp4','.mov','.webm','.mkv','.avi','.mts','.m2ts','.3gp','.hevc')
+$files = @(Get-ChildItem -LiteralPath $src -Recurse -File -ErrorAction SilentlyContinue |
+           Where-Object { $mediaExts -contains $_.Extension.ToLowerInvariant() })
 
 $z3Total = $files.Count
 $z3Done  = 0

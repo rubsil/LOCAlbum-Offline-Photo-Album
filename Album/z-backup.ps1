@@ -135,6 +135,10 @@ if ($lang -eq "en") {
     $msg_copy_error   = "[ERROR] Failed to copy"
     $msg_unchanged    = "Folders without changes"
     $msg_press_enter  = "Press Enter to close..."
+    $msg_failed       = "Files NOT copied"
+    $msg_done_errors  = "[ATTENTION] Backup finished, but some files were NOT copied (see [ERROR] above). Fix the cause (free space, disk disconnected...) and run the backup again: it only copies what is missing."
+    $msg_fat32_warn   = "[WARNING] The destination is FAT32, which does not accept files larger than 4 GB. These files will NOT be copied:"
+    $msg_fat32_hint   = "          To copy them, use a disk/pen formatted as exFAT or NTFS."
 } else {
     $msg_dst_inside   = "[ERRO] O destino do backup nao pode estar dentro da pasta de origem (nem o contrario). Escolhe outro local."
     $msg_root_label   = "(pasta principal)"
@@ -148,6 +152,10 @@ if ($lang -eq "en") {
     $msg_copy_error   = "[ERRO] Falha ao copiar"
     $msg_unchanged    = "Pastas sem alteracoes"
     $msg_press_enter  = "Pressiona Enter para fechar..."
+    $msg_failed       = "Ficheiros NAO copiados"
+    $msg_done_errors  = "[ATENCAO] A copia terminou, mas alguns ficheiros NAO foram copiados (ver [ERRO] acima). Resolve a causa (espaco livre, disco desligado...) e corre o backup outra vez: so copia o que falta."
+    $msg_fat32_warn   = "[AVISO] O destino esta em FAT32, que nao aceita ficheiros com mais de 4 GB. Estes ficheiros NAO vao ser copiados:"
+    $msg_fat32_hint   = "        Para os copiar, usa um disco/pen formatado em exFAT ou NTFS."
 }
 
 # --- Selecionar pastas ---
@@ -274,11 +282,28 @@ foreach ($k in $groupKeys) {
 # parece ter corrido bem mas deixa fotos por copiar.
 if ($totalFilesToCopy -gt 0) {
     $freeBytes = $null
+    $driveFmt  = ""
     try {
         $dstRoot   = [System.IO.Path]::GetPathRoot($dstFull)
         $driveInfo = New-Object System.IO.DriveInfo($dstRoot)
         $freeBytes = $driveInfo.AvailableFreeSpace
+        $driveFmt  = [string]$driveInfo.DriveFormat
     } catch { }
+
+    # FAT32 (muitas pens) nao aceita ficheiros >= 4 GB: avisar antes, em vez
+    # de deixar a copia falhar no meio de milhares de linhas
+    if ($driveFmt -eq "FAT32") {
+        $tooBig = @()
+        foreach ($k in $groupKeys) {
+            foreach ($f in $groups[$k]) { if ($f.Length -ge 4GB) { $tooBig += $f } }
+        }
+        if ($tooBig.Count -gt 0) {
+            Write-Host $msg_fat32_warn -ForegroundColor Yellow
+            foreach ($f in $tooBig) { Write-Host ("   - {0} ({1:N1} GB)" -f $f.FullName, ($f.Length / 1GB)) -ForegroundColor Yellow }
+            Write-Host $msg_fat32_hint -ForegroundColor Yellow
+            Write-Host ""
+        }
+    }
 
     $neededMB = [math]::Round($bytesNeeded / 1MB, 1)
     Write-Host ("{0}: {1} MB" -f $msg_space_needed, $neededMB)
@@ -307,6 +332,7 @@ if ($totalFilesToCopy -gt 0) {
 # --- Copiar apenas ficheiros novos/alterados ---
 $filesTotalCopied = 0
 $sizeTotalCopied  = 0
+$filesFailed      = 0
 $globalIndex      = 0
 $groupIndex       = 0
 
@@ -348,6 +374,7 @@ foreach ($relDir in $groupKeys) {
         # (ex: disco/pen desligou-se)
         if (-not (Test-Path -LiteralPath $file.FullName)) {
             Write-Host "    $msg_not_found`: $($file.Name)" -ForegroundColor Yellow
+            $filesFailed++
             continue
         }
         try {
@@ -357,6 +384,7 @@ foreach ($relDir in $groupKeys) {
             $sizeTotalCopied += $file.Length
         } catch {
             Write-Host "    $msg_copy_error`: $($file.Name) - $($_.Exception.Message)" -ForegroundColor Red
+            $filesFailed++
         }
     }
     [System.Console]::Out.Flush()
@@ -379,10 +407,17 @@ Write-Host "══════════════════════�
 Write-Host "  $msg_folders_copied`:          $totalGroups"
 Write-Host "  $msg_unchanged`:        $foldersSkipped"
 Write-Host "  $msg_files_copied`:        $filesTotalCopied"
+if ($filesFailed -gt 0) {
+    Write-Host "  $msg_failed`:     $filesFailed" -ForegroundColor Red
+}
 Write-Host "  $msg_size_copied`:         $('{0:N0}' -f ($sizeTotalCopied / 1MB)) MB"
 Write-Host ("  {0}:        {1}h {2}m {3}s" -f $msg_time_elapsed, [int][math]::Floor($elapsed.TotalHours), $elapsed.Minutes, $elapsed.Seconds)
 Write-Host ""
-Write-Host $msg_done -ForegroundColor Green
+if ($filesFailed -gt 0) {
+    Write-Host $msg_done_errors -ForegroundColor Red
+} else {
+    Write-Host $msg_done -ForegroundColor Green
+}
 Write-Host "════════════════════════════════════════"
 Write-Host ""
 Write-Host $msg_press_enter
