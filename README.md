@@ -1,26 +1,28 @@
 # 📸 LOCAlbum – Offline Photo Album  
-### 🚀 v1.5 — Smart Update Edition (Frozen Folders)
+### 🚀 v1.6 — Smart Update + Safe Backup Edition
 
 [![LOCAlbum Logo](https://i.imgur.com/2r820LY.png)](https://i.imgur.com/2r820LY.png)
 
 ---
 
-## 🆕 Novidades da versão 1.5 / What's new in v1.5
+## 🆕 Novidades da versão 1.6 / What's new in v1.6
 
-### ⚡ Frozen Folders — Atualização instantânea / Instant updates
+🇵🇹
+- ⚡ **Atualização rápida inteligente** — a opção **[2] → [A]** deteta sozinha as pastas que mudaram (fotos novas, apagadas ou renomeadas, mesmo à mão no Explorador) e só analisa essas. A **[B]** fica só para quando algo parecer errado.
+- 💾 **Backup mais seguro** — cria sempre uma pasta `LOCAlbum-Backup` no destino; copia **todas** as fotos (incluindo as sem data); compara ficheiro a ficheiro; avisa se não houver espaço, se o destino for FAT32 e houver vídeos com mais de 4 GB, e mostra no resumo os ficheiros que **não** foram copiados.
+- 🗂️ **Organizador** — já não cria cópias `_DUP` repetidas quando se corre várias vezes sobre a mesma origem; mostra a percentagem de progresso.
+- 🖼️ **Fotos** — HEIC (iPhone) convertidas automaticamente para JPG (para abrirem no Chrome/Firefox); WebP suportado; miniaturas rodadas corretamente; vídeos das Live Photos com miniatura própria.
+- 📱 **Álbum** — deslizar o dedo para mudar de foto (telemóvel/tablet); ficheiros com `#` no nome abrem; vídeos que o navegador não consegue reproduzir são saltados na apresentação.
+- 🛡️ Ficheiros técnicos ocultos apenas como "oculto" (sem atributo de sistema, para evitar falsos alarmes de antivírus).
 
-🇵🇹 O sistema de atualização do álbum (opção 2) foi completamente optimizado. Cada pasta de mês fica agora "congelada" após ser processada. Nas execuções seguintes, pastas sem alterações são ignoradas — apenas as pastas com fotos novas são intervencionadas.
+🇬🇧
+- ⚡ **Smart quick update** — option **[2] → [A]** detects changed folders by itself (new, deleted or renamed photos, even when changed by hand in Explorer) and only analyses those. **[B]** is only needed if something looks wrong.
+- 💾 **Safer backup** — always uses a `LOCAlbum-Backup` folder at the destination; copies **all** photos (including undated ones); compares file by file; warns about low free space and about videos over 4 GB on FAT32 drives, and lists in the summary any files that were **not** copied.
+- 🗂️ **Organizer** — no longer creates repeated `_DUP` copies when run several times on the same source; shows progress percentage.
+- 🖼️ **Photos** — HEIC (iPhone) automatically converted to JPG (so they open in Chrome/Firefox); WebP supported; thumbnails correctly rotated; Live Photo videos get their own thumbnail.
+- 📱 **Album** — swipe to change photo (phone/tablet); files with `#` in the name open; videos the browser cannot play are skipped in the slideshow.
+- 🛡️ Technical files are hidden only as "hidden" (no system attribute, to avoid antivirus false alarms).
 
-Ao escolher a opção 2, o utilizador pode agora escolher entre:
-- **[A] Atualização rápida** — usa o cache de pastas (recomendado se usaste sempre a opção [1] para adicionar fotos/vídeos)
-- **[B] Atualização completa** — volta a fazer scan a tudo (recomendado se adicionaste ou alteraste fotos/vídeos manualmente nas pastas diretamente no Explorer)
-
-🇬🇧 The album update system (option 2) has been completely optimized. Each month folder is now "frozen" after being processed. On subsequent runs, unchanged folders are skipped — only folders with new photos are rescanned.
-
-When choosing option 2, the user can now select:
-- **[A] Quick update** — uses folder cache (recommended if you always used option [1] to add photos)
-- **[B] Full update** — rescans everything (recommended if you added photos/videos manually in Explorer)
-  
 ---
 
 # 🇵🇹 Apresentação
@@ -58,7 +60,7 @@ Perfect for parents capturing their children's growth and memories.
 
 1. 📦 **Descarrega o projeto completo** através do botão verde **“Code → Download ZIP”** no topo da página e extrai-o **para a raiz de um disco ou pen USB**  
    _(ex.: `C:\Album\` ou `E:\Album\`)_.  
-   > ⚠️ **Importante:** o projeto deve estar diretamente na raiz, **não dentro de subpastas**.
+   > ⚠️ **Importante:** recomenda-se a raiz do disco. Funciona noutras pastas, **desde que o caminho não tenha `[` `]` nem `!`** (o Windows PowerShell não consegue correr scripts a partir daí — o Manager avisa se for o caso).
 
 2. ▶️ **Executa o ficheiro** `LOCALBUM - Manager.bat`.  
    - Este é agora o **único ficheiro necessário**: todas as funções estão reunidas aqui.  
@@ -79,9 +81,10 @@ Perfect for parents capturing their children's growth and memories.
 - **[1]** organiza automaticamente milhares de fotos por pastas **Ano/Mês** (sem duplicados).  
 - **[2]** cria ou atualiza o álbum HTML (`Ver album.html` / `View album.html`).  
   > 🔍 *Nota:* Se existirem muitas fotos, este processo pode demorar um pouco na primeira execução devido à criação das thumbnails.  
-  > ⚡ A partir da segunda execução será quase instantâneo graças ao sistema de **pastas congeladas** — só processa pastas com fotos novas.
+  > ⚡ A partir da segunda execução será quase instantâneo graças ao sistema de **pastas congeladas** — só processa pastas que mudaram.  
+  > Ao correr escolhes **[A] Rápida** (deteta sozinha o que mudou — usa sempre esta) ou **[B] Completa** (volta a analisar tudo — só se algo parecer errado).
 - **[3]** repõe o projeto ao estado original, **sem apagar as tuas fotos**.  
-- **[4]** faz uma cópia de segurança incremental das tuas fotos, thumbnails e configuração — recomendada para o disco externo/pen USB seguirem a regra 3-2-1.  
+- **[4]** faz uma cópia de segurança incremental de **todas as tuas fotos e vídeos** (incluindo as sem data) para uma pasta `LOCAlbum-Backup` no destino escolhido — recomendada para o disco externo/pen USB seguirem a regra 3-2-1. As miniaturas e o HTML não são copiados: recriam-se com a opção [2]. O backup nunca apaga nada no destino.  
 - **[i]** mostra ajuda e instruções.
 
 4. 💾 O ficheiro `Ver album.html` será criado automaticamente **ao lado da pasta `Album/`.**
@@ -97,7 +100,7 @@ Perfect for parents capturing their children's growth and memories.
 
 1. 📦 **Download the full project** using the green **“Code → Download ZIP”** button at the top of this page and extract it **to the root of a drive or USB stick**  
    _(e.g., `C:\Album\` or `E:\Album\`)_.  
-   > ⚠️ **Important:** the project must be placed directly in the drive root — **not inside subfolders**.
+   > ⚠️ **Important:** the drive root is recommended. Other folders work too, **as long as the path has no `[` `]` or `!`** (Windows PowerShell cannot run scripts from there — the Manager warns you if so).
 
 2. ▶️ **Run the file** `LOCALBUM - Manager.bat`.  
    - This is now the **only file you need** — all functions are unified here.  
@@ -118,9 +121,10 @@ Perfect for parents capturing their children's growth and memories.
 - **[1]** automatically sorts thousands of photos into **Year/Month** folders (no duplicates).  
 - **[2]** creates or updates the HTML album (`View album.html` / `Ver album.html`).  
   > 🔍 *Note:* If you have many photos, the first run may take a while because thumbnails must be created.  
-  > ⚡ From the second run onwards, updates are nearly instant thanks to the **frozen folders** system — only folders with new photos are rescanned. 
+  > ⚡ From the second run onwards, updates are nearly instant thanks to the **frozen folders** system — only folders that changed are rescanned.  
+  > When you run it you choose **[A] Quick** (detects what changed by itself — always use this one) or **[B] Full** (analyses everything again — only if something looks wrong).
 - **[3]** resets the project to its original state, **without deleting your photos**.  
-- **[4]** creates an incremental backup of your photos, thumbnails, and configuration — recommended for your external drive/USB stick as part of a 3-2-1 strategy.  
+- **[4]** creates an incremental backup of **all your photos and videos** (including undated ones) into a `LOCAlbum-Backup` folder at the destination you choose — recommended for your external drive/USB stick as part of a 3-2-1 strategy. Thumbnails and the HTML are not copied: option [2] recreates them. The backup never deletes anything at the destination.  
 - **[i]** displays help and instructions.
 
 4. 💾 The file `View album.html` will be automatically created **next to the `Album/` folder.**
@@ -141,16 +145,17 @@ X:
             ├── Janeiro
                    ├── _frozen.flag    (oculto / hidden — criado automaticamente)
                    └── _cache_mes.json (oculto / hidden — criado automaticamente)
-      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
-      ├── config (oculto / hidden)
-      ├── exiftool.exe (oculto / hidden)
-      ├── FFmpeg.exe (oculto / hidden)
+      ├── Thumbnails (oculto / hidden) ← (criado automaticamente / automatically created)
+      ├── Converted (oculto / hidden) ← cópias JPG das fotos HEIC / JPG copies of HEIC photos
+      ├── config.ini (oculto / hidden)
+      ├── exiftool.exe + exiftool_files (ocultos / hidden)
+      ├── ffmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
       ├── favicon.png (oculto / hidden)
       ├── template.html (oculto / hidden)
-      ├── z1.ps1, z3.ps1 (ocultos / hidden)
+      ├── z1.ps1, z3.ps1, z-backup.ps1 (ocultos / hidden)
 └── Ver album.html / View album.html
 ```
 🪄 **🇵🇹 Após a primeira execução**, os ficheiros técnicos são **ocultados automaticamente**,  
@@ -186,16 +191,17 @@ X:
             ├── Janeiro
                    ├── _frozen.flag    (oculto / hidden — criado automaticamente)
                    └── _cache_mes.json (oculto / hidden — criado automaticamente)
-      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
-      ├── config (oculto / hidden)
-      ├── exiftool.exe (oculto / hidden)
-      ├── FFmpeg.exe (oculto / hidden)
+      ├── Thumbnails (oculto / hidden) ← (criado automaticamente / automatically created)
+      ├── Converted (oculto / hidden) ← cópias JPG das fotos HEIC / JPG copies of HEIC photos
+      ├── config.ini (oculto / hidden)
+      ├── exiftool.exe + exiftool_files (ocultos / hidden)
+      ├── ffmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
       ├── favicon.png (oculto / hidden)
       ├── template.html (oculto / hidden)
-      ├── z1.ps1, z3.ps1 (ocultos / hidden)
+      ├── z1.ps1, z3.ps1, z-backup.ps1 (ocultos / hidden)
 └── Ver album.html / View album.html
 ```
 ## 🇵🇹 Português
@@ -203,7 +209,7 @@ X:
   - a pasta `Fotos/`
   - `template.html`
   - `config.ini`
-  - `z1.ps1` e `z3.ps1`
+  - `z1.ps1`, `z3.ps1` e `z-backup.ps1`
 
 - Funciona em:
   - Windows (total suporte)
@@ -217,7 +223,7 @@ X:
   - the `Fotos/` folder
   - `template.html`
   - `config.ini`
-  - `z1.ps1`, `z3.ps1`
+  - `z1.ps1`, `z3.ps1`, `z-backup.ps1`
 
 - Works on:
   - Windows (full support)
@@ -244,23 +250,24 @@ X:
             ├── Janeiro
                    ├── _frozen.flag    (oculto / hidden — criado automaticamente)
                    └── _cache_mes.json (oculto / hidden — criado automaticamente)
-      ├── Thumbnails (hidden) ← (criado automaticamente / automatically created )
-      ├── config (oculto / hidden)
-      ├── exiftool.exe (oculto / hidden)
-      ├── FFmpeg.exe (oculto / hidden)
+      ├── Thumbnails (oculto / hidden) ← (criado automaticamente / automatically created)
+      ├── Converted (oculto / hidden) ← cópias JPG das fotos HEIC / JPG copies of HEIC photos
+      ├── config.ini (oculto / hidden)
+      ├── exiftool.exe + exiftool_files (ocultos / hidden)
+      ├── ffmpeg.exe (oculto / hidden)
       ├── localbum-cache.json (oculto / hidden)
       ├── LOCALBUM - Manager.bat ← (ficheiro principal / main file)
       ├── ajuda_album.png (oculto / hidden) 
       ├── favicon.png (oculto / hidden)
       ├── template.html (oculto / hidden)
-      ├── z1.ps1, z3.ps1 (ocultos / hidden)
+      ├── z1.ps1, z3.ps1, z-backup.ps1 (ocultos / hidden)
 └── Ver album.html / View album.html
 ```
 - 🚫 **Do not rename or move** the following folders/files:
   - `Fotos/`
   - `template.html`
   - `config.ini`
-  - `z1.ps1`, `z3.ps1`
+  - `z1.ps1`, `z3.ps1`, `z-backup.ps1`
 
 - ⚙️ The `config.ini` file is generated automatically and should remain hidden.  
 - 💾 You can copy the whole project (the `Album` folder) to a **USB stick** or **external drive** —  
