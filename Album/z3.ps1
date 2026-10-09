@@ -13,7 +13,7 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
     Write-Host "[INFO] Reiniciando o script em modo STA (necessario para W11)..."
     powershell.exe -STA -ExecutionPolicy Bypass -File "$PSCommandPath" -lang "$lang"
-    exit
+    exit $LASTEXITCODE   # passa ao Gestor o resultado do script relancado
 }
 
 try {
@@ -51,7 +51,7 @@ if ($lang -eq "en") {
     $msg_select_dest   = "Select the destination folder for your photos (default: Album\Fotos)"
     $msg_cancel        = "No folder selected. Exiting..."
     $msg_done          = "[OK] Organization complete! Photos were grouped by year and month folders."
-    $msg_reminder      = ">>> Remember to go back to the LOCALBUM Manager and run OPTION 2 to create or update your album."
+    $msg_reminder      = ">>> Next, the Manager will ask whether you want to update the album now (option 2)."
     $msg_no_exif       = "No EXIF or valid date - moved to manual folder"
     $msg_start         = "[INFO] Starting photo organization..."
     $noDateFolderName  = "__FILES_WITHOUT_DATE - CHECK_MANUALLY"
@@ -62,7 +62,7 @@ else {
     $msg_select_dest   = "Escolhe a pasta de destino (por defeito: Album\Fotos)"
     $msg_cancel        = "Nenhuma pasta selecionada. A sair..."
     $msg_done          = "[OK] Organizacao concluida! As fotos foram agrupadas por pastas de ano e mes."
-    $msg_reminder      = ">>> Nao te esquecas de voltar ao Gestor LOCALBUM e correr a OPCAO [2] para criar ou atualizar o album."
+    $msg_reminder      = ">>> A seguir, o Gestor pergunta se queres atualizar o album agora (opcao [2])."
     $msg_no_exif       = "Sem data (nome/EXIF) - movido para pasta manual"
     $msg_start         = "[INFO] A iniciar a organizacao das fotos..."
     $noDateFolderName  = "__FICHEIROS_SEM_DATA - VERIFICAR_MANUALMENTE"
@@ -387,5 +387,6 @@ Write-Host "-------------------------------------------"
 Write-Host $msg_done -ForegroundColor Green
 Write-Host $msg_reminder
 Write-Host ""
-Write-Host "Press any key to exit..."
-[System.Console]::ReadKey() | Out-Null
+# Codigo 10 = organizacao concluida. O Gestor (.bat) usa-o para perguntar
+# se queres atualizar o album logo a seguir (em vez de pedir "prima uma tecla").
+exit 10

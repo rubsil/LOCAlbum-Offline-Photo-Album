@@ -335,7 +335,21 @@ if not exist "%ROOT%\z3.ps1" (
     if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
 )
 "%PWSH%" -ExecutionPolicy Bypass -NoProfile -File "%ROOT%\z3.ps1" -lang %LANG%
+:: O z3 sai com o codigo 10 quando a organizacao terminou (0 se cancelado/erro)
+if errorlevel 10 goto ORGANIZE_DONE
 if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
+
+:ORGANIZE_DONE
+echo.
+if "%LANG%"=="pt" (
+    choice /c SN /m "Queres atualizar o album agora (opcao 2)?"
+) else (
+    choice /c YN /m "Do you want to update the album now (option 2)?"
+)
+if errorlevel 2 (
+    if "%LANG%"=="pt" (goto MENU_PT) else (goto MENU_EN)
+)
+goto GENERATE
 
 
 :: =====================================================
