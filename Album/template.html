@@ -110,6 +110,8 @@ button{
 button:hover{background:rgba(255,255,255,.06)}
 button.active{background:var(--accent); color:#071018; font-weight:700}
 .select{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px}
+/* Quadrado com a cor do tema/gradiente escolhido, ao lado de cada lista */
+.swatch{display:inline-block;width:18px;height:18px;border-radius:5px;border:1px solid rgba(255,255,255,.35);flex:0 0 auto}
 #langToggle{user-select:none;display:flex;align-items:center;gap:4px;font-size:20px}
 
 /* ---------- Barra de filtros a toda a largura ---------- */
@@ -220,6 +222,9 @@ main.viewer{
 .meta{position:absolute;left:14px;bottom:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted);z-index:1001}
 .age{position:absolute;right:14px;bottom:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#ffd;z-index:1001}
 .counter{position:absolute;left:14px;top:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#fff;z-index:1001;display:none}
+/* Botao "Original": abre a foto/video original numa aba nova (para guardar ou partilhar) */
+.openOrig{position:absolute;right:14px;top:14px;background:rgba(0,0,0,.45);padding:6px 10px;border-radius:8px;font-size:13px;color:#fff;z-index:1001;display:none;text-decoration:none}
+.openOrig:hover{background:var(--accent);color:#071018}
 .progress{position:absolute;left:0;top:0;height:3px;width:0;background:var(--accent);z-index:1002;transition:width linear}
 
 /* Thumbs + data visível */
@@ -301,6 +306,7 @@ main.viewer{
 }
 
 /* Botões (Iniciar/Sair) muito mais compactos e elegantes */
+#fsShuffle{padding:3px 10px;border-radius:12px}
 #fsToggle, #fsExit {
   background: var(--accent); 
   color: #0f1115;
@@ -362,8 +368,19 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
 
 /* ---------- Responsivo ---------- */
 @media(max-width:900px){
-  main.viewer{grid-template-columns:1fr}
+  /* foto ocupa o espaco disponivel; miniaturas numa faixa de 160px por baixo */
+  main.viewer{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) 160px}
   .thumbs{order:2;border-left:none;border-top:1px solid rgba(255,255,255,.06);height:160px;display:flex;overflow-x:auto;flex-direction:row}
+}
+
+/* Telemovel: titulo em cima e controlos por baixo (antes ficavam lado a lado,
+   saiam do ecra e tapavam o titulo e os filtros) */
+@media(max-width:700px){
+  header{flex-direction:column;align-items:stretch}
+  .controls{width:auto;margin-left:0}
+  .controls-row{flex-wrap:wrap;gap:6px}
+  .controls button{padding:6px 10px;font-size:13px}
+  .titulo-brilhante{font-size:32px}
 }
 
 /* Separador de dias */
@@ -518,6 +535,7 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
       <div class="controls-row">
         <button id="fullscreen">Fullscreen (F)</button>
         <button id="slideshow">Iniciar slideshow (space)</button>
+        <button id="shuffle" title="Ordem aleatória">🔀</button>
         <label style="display:flex;align-items:center;gap:6px">
           <span id="speedLbl">Velocidade</span>
           <select id="speed" class="select">
@@ -543,6 +561,7 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
             <option value="peach">Pêssego</option>
             <option value="neon">Neon Preto</option>
           </select>
+          <span class="swatch" id="themeSwatch"></span>
         </label>
         <label style="display:flex;align-items:center;gap:6px">
           <span id="gradLbl">Gradiente</span>
@@ -558,6 +577,7 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
             <option value="neon">Neon Verde / Neon</option>
             <option value="silver">Prateado / Silver</option>
           </select>
+          <span class="swatch" id="gradSwatch"></span>
         </label>
       </div>
     </div>
@@ -576,6 +596,7 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
       <div id="ph" style="color:var(--muted)">👋 Escolhe um ano e mês para começar.</div>
       <div class="progress" id="bar"></div>
       <div class="counter" id="counter"></div>
+      <a class="openOrig" id="openOrig" target="_blank" rel="noopener">⬇️ Original</a>
       <div class="meta" id="meta" style="display:none"></div>
       <div class="age" id="age" style="display:none"></div>
     </section>
@@ -588,6 +609,7 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
 
   <div class="fsHud" id="fsHud">
     <button id="fsToggle">Iniciar slideshow</button>
+    <button id="fsShuffle" title="Ordem aleatória">🔀</button>
     <label style="display:flex;align-items:center;gap:6px">
       <span id="fsSpeedLbl">Velocidade</span>
       <select id="fsSpeed" class="select">
@@ -623,37 +645,47 @@ body.show-arrows .arrow{opacity:0.35;pointer-events:auto}
 const STR = {
   pt:{
     choose:"👋 Escolhe um ano e mês para começar.",
-    speed:"Velocidade",
-    theme:"Tema",
-    gradient:"Gradiente",
-    start:"Iniciar slideshow (espaço)",
-    stop:"Parar slideshow (espaço)",
-    exit:"Sair",
-    fullscreen:"Fullscreen (F)",
+    speed:"⏱️ Velocidade",
+    theme:"🎨 Tema",
+    gradient:"🌈 Gradiente",
+    start:"▶️ Iniciar slideshow (espaço)",
+    stop:"⏸️ Parar slideshow (espaço)",
+    exit:"🚪 Sair",
+    fullscreen:"🖥️ Ecrã inteiro (F)",
     all:"📁 Tudo",
     photos:"📷 Fotos",
     videos:"🎬 Vídeos",
     by:"Produzido por",
     donate:"Doações",
     project:"Projeto",
-    memories: "Memórias de"
+    memories: "Memórias de",
+    shuffle:"Ordem aleatória (todas as fotos)",
+    openOrig:"⬇️ Original",
+    openOrigTitle:"Abrir o original numa aba nova (para guardar ou partilhar)",
+    cntAll:"fotos/vídeos", cntPhotos:"fotos", cntVideos:"vídeos",
+    cntAll1:"foto/vídeo", cntPhotos1:"foto", cntVideos1:"vídeo"
   },
   en:{
     choose:"👋 Pick a year and month to begin.",
-    speed:"Speed",
-    theme:"Theme",
-    gradient:"Gradient",
-    start:"Start slideshow (space)",
-    stop:"Stop slideshow (space)",
-    exit:"Exit",
-    fullscreen:"Fullscreen (F)",
+    speed:"⏱️ Speed",
+    theme:"🎨 Theme",
+    gradient:"🌈 Gradient",
+    start:"▶️ Start slideshow (space)",
+    stop:"⏸️ Stop slideshow (space)",
+    exit:"🚪 Exit",
+    fullscreen:"🖥️ Fullscreen (F)",
     all:"📁 All",
     photos:"📷 Photos",
     videos:"🎬 Videos",
     by:"Made by",
     donate:"Donations",
     project:"Project",
-    memories: "Memories of"
+    memories: "Memories of",
+    shuffle:"Shuffle (all photos)",
+    openOrig:"⬇️ Original",
+    openOrigTitle:"Open the original in a new tab (to save or share it)",
+    cntAll:"photos/videos", cntPhotos:"photos", cntVideos:"videos",
+    cntAll1:"photo/video", cntPhotos1:"photo", cntVideos1:"video"
   }
 };
 
@@ -691,6 +723,9 @@ const fsToggle= document.getElementById('fsToggle');
 const themeSel= document.getElementById('theme');
 const grad    = document.getElementById('grad');
 const langToggle=document.getElementById('langToggle');
+const shuffleBtn  = document.getElementById('shuffle');
+const fsShuffleBtn= document.getElementById('fsShuffle');
+const openOrigEl  = document.getElementById('openOrig');
 
 const fltAll=document.getElementById('fltAll');
 const fltPhotos=document.getElementById('fltPhotos');
@@ -706,14 +741,74 @@ let currentYear=null, currentMonth=null;
 let otdMatches = [];
 let Lang = localStorage.getItem('album_lang') || (typeof CONFIG!=='undefined' ? (CONFIG.language||'pt') : 'pt');
 
+/* ===== Apresentacao aleatoria ===== */
+// Baralha todas as fotos (respeitando o filtro Tudo/Fotos/Videos) e mostra-as
+// por essa ordem, sem repetir nenhuma ate passar por todas.
+let shuffleOn = false;
+try { shuffleOn = localStorage.getItem('album_shuffle') === '1'; } catch(e) {}
+let shuffleQueue = [];
+function nextRandom(){
+  const filtered = getFilteredFlat();
+  if(!filtered.length) return;
+  if(!shuffleQueue.length){
+    shuffleQueue = filtered.map(x => indexMap.get(`${x.year}|${x.month}|${x.name}`)).filter(i => i !== undefined);
+    for(let i = shuffleQueue.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffleQueue[i], shuffleQueue[j]] = [shuffleQueue[j], shuffleQueue[i]];
+    }
+  }
+  let idx = shuffleQueue.pop();
+  if(idx === curIdx && shuffleQueue.length) idx = shuffleQueue.pop();
+  if(idx !== undefined) show(idx);
+}
+// Passo seguinte da apresentacao (normal ou aleatoria)
+function advanceSS(){ if(shuffleOn) nextRandom(); else nextGlobal(); }
+function setShuffle(on){
+  shuffleOn = !!on;
+  shuffleQueue = [];
+  try { localStorage.setItem('album_shuffle', shuffleOn ? '1' : '0'); } catch(e) {}
+  [shuffleBtn, fsShuffleBtn].forEach(b => { if(b) b.classList.toggle('active', shuffleOn); });
+}
+
+/* Numero de fotos/videos (mostrado ao passar o rato nos botoes de ano e mes) */
+function countLabel(n){
+  const T = STR[Lang] || STR.pt;
+  const one = (n === 1);
+  const w = currentFilter === 'photos' ? (one ? T.cntPhotos1 : T.cntPhotos)
+          : currentFilter === 'videos' ? (one ? T.cntVideos1 : T.cntVideos)
+          : (one ? T.cntAll1 : T.cntAll);
+  return n.toLocaleString(Lang === 'pt' ? 'pt-PT' : 'en-GB') + ' ' + w;
+}
+
 /* Helpers */
 function applyTheme(name){
   const t = themes[name] || themes.dark;
   for(const k in t) document.documentElement.style.setProperty(`--${k}`, t[k]);
   themeSel.value = name;
+  const sw = document.getElementById('themeSwatch');
+  if(sw) sw.style.background = `linear-gradient(135deg,${t.bg} 0 50%,${t.accent} 50% 100%)`;
+}
+
+// Pinta cada opcao das listas com as cores do respetivo tema/gradiente.
+// (Funciona no Chrome/Edge/Firefox em Windows; no Mac/iPhone a lista e do
+// sistema e aparece sem cores, sem prejuizo.)
+function paintSelectOptions(){
+  [...themeSel.options].forEach(o => {
+    const t = themes[o.value]; if(!t) return;
+    o.style.backgroundColor = t.card; o.style.color = t.accent;
+  });
+  [...grad.options].forEach(o => {
+    const c = GRAD_COLORS[o.value]; if(!c) return;
+    o.style.backgroundColor = c; o.style.color = '#111';
+  });
 }
 
 /* Gradiente do título */
+// Cor principal de cada gradiente (usada no titulo, no quadrado e na lista)
+const GRAD_COLORS = {
+  pink:'#ffd6e8', blue:'#aee3ff', gold:'#ffd700', lilac:'#d6c2ff', aqua:'#a9fff7',
+  ruby:'#ff8a8a', emerald:'#9dffcf', sunrise:'#ffb48a', neon:'#b7ff8f', silver:'#d9d9d9'
+};
 function applyGradient(name){
   const headline=document.querySelector('.titulo-brilhante');
   const map={
@@ -728,6 +823,8 @@ function applyGradient(name){
     neon:'linear-gradient(90deg,#fff,#b7ff8f,#fff)',
     silver:'linear-gradient(90deg,#fff,#d9d9d9,#fff)'
   };
+  const sw = document.getElementById('gradSwatch');
+  if(sw) sw.style.background = `linear-gradient(135deg,#fff,${GRAD_COLORS[name] || GRAD_COLORS.pink})`;
   if(headline){
     headline.style.background = map[name] || map.pink;
     headline.style.webkitBackgroundClip='text';
@@ -738,6 +835,11 @@ function applyGradient(name){
   localStorage.setItem('album_gradient', name);
 }
 
+/* Em ecras pequenos (telemovel) nao ha teclado: esconder "(F)" e "(espaço)" */
+const smallScreen = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
+function kl(s){ return (smallScreen && smallScreen.matches) ? s.replace(/\s*\((F|espaço|space)\)/, '') : s; }
+if(smallScreen && smallScreen.addEventListener) smallScreen.addEventListener('change', () => setTexts());
+
 /* Traduções dinâmicas */
 function setTexts(){
   const T = STR[Lang] || STR.pt;
@@ -747,9 +849,9 @@ function setTexts(){
   document.getElementById('themeLbl').textContent = T.theme;
   document.getElementById('gradLbl').textContent  = T.gradient;
 
-  document.getElementById('fullscreen').textContent = T.fullscreen;
-  document.getElementById('slideshow').textContent = timer ? T.stop : T.start;
-  fsToggle.textContent = timer ? T.stop : T.start;
+  document.getElementById('fullscreen').textContent = kl(T.fullscreen);
+  document.getElementById('slideshow').textContent = kl(timer ? T.stop : T.start);
+  fsToggle.textContent = kl(timer ? T.stop : T.start);
 
   document.getElementById('fltAll').textContent    = T.all;
   document.getElementById('fltPhotos').textContent = T.photos;
@@ -761,6 +863,11 @@ function setTexts(){
              + ((CONFIG&&CONFIG.donateURL)?` • ${T.donate}: ${CONFIG.donateURL}`:'');
 
   document.getElementById('footerLine').textContent = by;
+
+  document.getElementById('fsExit').textContent = T.exit;
+  if(shuffleBtn)   shuffleBtn.title   = T.shuffle;
+  if(fsShuffleBtn) fsShuffleBtn.title = T.shuffle;
+  if(openOrigEl){ openOrigEl.textContent = T.openOrig; openOrigEl.title = T.openOrigTitle; }
 }
 
 /* Ordenação de meses */
@@ -949,6 +1056,8 @@ function renderYears(){
     const btn=document.createElement('button');
     btn.textContent = y === '9999' ? (Lang === 'pt' ? '📁 Outros' : '📁 Various') : y;
     btn.dataset.year = y;
+    btn.title = countLabel(Object.keys(manifest[y]).reduce(
+      (s, m) => s + (manifest[y][m] || []).filter(it => matchFilterByName(it.name, currentFilter)).length, 0));
 
     if(y === currentYear) btn.classList.add('active');
 
@@ -1004,6 +1113,7 @@ function renderMonths(y){
   allMonths.forEach(m=>{
     const btn=document.createElement('button');
     btn.textContent=m.charAt(0).toUpperCase() + m.slice(1);
+    btn.title = countLabel((manifest[y][m] || []).filter(it => matchFilterByName(it.name, currentFilter)).length);
 
     if(m === currentMonth) btn.classList.add('active');
 
@@ -1031,6 +1141,7 @@ function renderMonths(y){
 function setFilter(f){
   currentFilter = f;
   filteredCache = null;
+  shuffleQueue = [];
   monthFilterCache.clear();
   [fltAll, fltPhotos, fltVideos].forEach(b => b.classList.remove('active'));
   ({ all: fltAll, photos: fltPhotos, videos: fltVideos }[f]).classList.add('active');
@@ -1060,6 +1171,7 @@ function setFilter(f){
     currentYear = null; currentMonth = null;
     renderYears(); monthsEl.innerHTML = ''; thumbsEl.innerHTML = '';
     stage.querySelectorAll('img,video').forEach(n => n.remove());
+    if (openOrigEl) openOrigEl.style.display = 'none';
     if (ph) {
       ph.style.display = 'block';
       ph.textContent = Lang === 'pt' ? 'Nenhum conteúdo encontrado para este filtro.' : 'No content found for this filter.';
@@ -1263,7 +1375,7 @@ function show(i){
     const myIdx = curIdx;
     el.onerror=()=>{
       if(wasRunning && curIdx===myIdx && el.isConnected){
-        setTimeout(()=>{ if(curIdx===myIdx && !timer){ startSS(); nextGlobal(); } }, 1000);
+        setTimeout(()=>{ if(curIdx===myIdx && !timer){ startSS(); advanceSS(); } }, 1000);
       }
     };
   }
@@ -1271,6 +1383,8 @@ function show(i){
   el.onloadeddata=()=>el.classList.add('visible');
   if(!isVideo){ el.style.cursor='zoom-in'; el.onclick=()=>openZoom(it.src); }
   stage.appendChild(el);
+
+  if(openOrigEl){ openOrigEl.href = encPath(it.src); openOrigEl.style.display = 'block'; }
 
   const dateLabel = it.date ? fmtDate(it.date) : (Lang === 'pt' ? 'Sem data' : 'No date');
   metaEl.style.display='block'; metaEl.textContent=dateLabel;
@@ -1341,23 +1455,23 @@ function resetBar(){ bar.style.transition='none'; bar.style.width='0%'; void bar
 function startSS(){
   if(timer) return;
   slideMs = document.fullscreenElement ? (+fsSpeed.value||4000) : (+speedSel.value||4000);
-  timer=setInterval(()=>{ nextGlobal(); resetBar(); }, slideMs);
+  timer=setInterval(()=>{ advanceSS(); resetBar(); }, slideMs);
   const T=STR[Lang]||STR.pt;
   document.getElementById('slideshow').classList.add('active');
-  document.getElementById('slideshow').textContent=T.stop; fsToggle.textContent=T.stop; resetBar();
+  document.getElementById('slideshow').textContent=kl(T.stop); fsToggle.textContent=kl(T.stop); resetBar();
 }
 function stopSS(){
   if(!timer) return; clearInterval(timer); timer=null; bar.style.width='0%';
   const T=STR[Lang]||STR.pt;
   document.getElementById('slideshow').classList.remove('active');
-  document.getElementById('slideshow').textContent=T.start; fsToggle.textContent=T.start;
+  document.getElementById('slideshow').textContent=kl(T.start); fsToggle.textContent=kl(T.start);
 }
 function toggleSS(){ timer?stopSS():startSS(); }
 document.getElementById('slideshow').onclick=toggleSS;
 
 function applyNewSpeed(){
   slideMs = document.fullscreenElement ? (+fsSpeed.value||4000) : (+speedSel.value||4000);
-  if(timer){ clearInterval(timer); timer=setInterval(()=>{ nextGlobal(); resetBar(); }, slideMs); }
+  if(timer){ clearInterval(timer); timer=setInterval(()=>{ advanceSS(); resetBar(); }, slideMs); }
   resetBar();
 }
 speedSel.onchange=applyNewSpeed; fsSpeed.onchange=applyNewSpeed;
@@ -1380,6 +1494,8 @@ document.addEventListener('fullscreenchange',()=>{
 document.addEventListener('mousemove',()=>{ document.body.classList.add('show-arrows'); showHud(); });
 document.getElementById('fsExit').onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); };
 fsToggle.onclick=toggleSS;
+if(shuffleBtn)   shuffleBtn.onclick   = () => setShuffle(!shuffleOn);
+if(fsShuffleBtn) fsShuffleBtn.onclick = () => setShuffle(!shuffleOn);
 
 document.getElementById('arrowLeft').onclick=prev;
 document.getElementById('arrowRight').onclick=next;
@@ -1600,6 +1716,7 @@ function init(){
   document.getElementById('subtitle').textContent = proj;
   document.getElementById('headline').title = name;
 
+  paintSelectOptions();
   applyTheme(localStorage.getItem('album_theme') || (CONFIG&&CONFIG.theme) || 'dark');
   themeSel.value = localStorage.getItem('album_theme') || 'dark';
   themeSel.onchange=e=>{ applyTheme(e.target.value); localStorage.setItem('album_theme', e.target.value); };
@@ -1630,6 +1747,7 @@ function init(){
 
   setTexts();
   checkOnThisDay();
+  [shuffleBtn, fsShuffleBtn].forEach(b => { if(b) b.classList.toggle('active', shuffleOn); });
 
   if(typeof manifest==='undefined'){ stage.innerHTML='<div style="color:#bbb">Erro: manifest não encontrado.</div>'; return; }
 
