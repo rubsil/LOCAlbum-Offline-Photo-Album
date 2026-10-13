@@ -1,11 +1,11 @@
 # 📸 LOCAlbum – Offline Photo Album  
-### 🚀 v1.6 — Smart Update + Safe Backup Edition
+### 🚀 v1.6.1 — Smart Update + Safe Backup Edition
 
 [![LOCAlbum Logo](https://i.imgur.com/2r820LY.png)](https://i.imgur.com/2r820LY.png)
 
 ---
 
-## 🆕 Novidades da versão 1.6 / What's new in v1.6
+## 🆕 Novidades da versão 1.6.1 / What's new in v1.6.1
 
 🇵🇹
 - ⚡ **Atualização rápida inteligente** — a opção **[2] → [A]** deteta sozinha as pastas que mudaram (fotos novas, apagadas ou renomeadas, mesmo à mão no Explorador) e só analisa essas. A **[B]** fica só para quando algo parecer errado.
@@ -14,6 +14,9 @@
 - 🖼️ **Fotos** — HEIC (iPhone) convertidas automaticamente para JPG (para abrirem no Chrome/Firefox); WebP suportado; miniaturas rodadas corretamente; vídeos das Live Photos com miniatura própria.
 - 📱 **Álbum** — deslizar o dedo para mudar de foto (telemóvel/tablet); ficheiros com `#` no nome abrem; vídeos que o navegador não consegue reproduzir são saltados na apresentação.
 - 🛡️ Ficheiros técnicos ocultos apenas como "oculto" (sem atributo de sistema, para evitar falsos alarmes de antivírus).
+- 🗂️➡️🔄 **Depois de organizar** — no fim do Organizador, o Gestor pergunta se queres atualizar o álbum logo a seguir (S/N).
+- 🎛️ **Álbum** — botão **⬇️ Original**; modo **aleatório 🔀** na apresentação; número de fotos ao passar o rato nos anos/meses; emojis nos controlos; quadradinhos de cor nos temas e gradientes; layout corrigido no telemóvel.
+- 📁 Caminhos com `'`, `&` ou `()` já funcionam; caminhos com `[ ]` ou `!` são detetados com aviso claro.
 
 🇬🇧
 - ⚡ **Smart quick update** — option **[2] → [A]** detects changed folders by itself (new, deleted or renamed photos, even when changed by hand in Explorer) and only analyses those. **[B]** is only needed if something looks wrong.
@@ -22,6 +25,9 @@
 - 🖼️ **Photos** — HEIC (iPhone) automatically converted to JPG (so they open in Chrome/Firefox); WebP supported; thumbnails correctly rotated; Live Photo videos get their own thumbnail.
 - 📱 **Album** — swipe to change photo (phone/tablet); files with `#` in the name open; videos the browser cannot play are skipped in the slideshow.
 - 🛡️ Technical files are hidden only as "hidden" (no system attribute, to avoid antivirus false alarms).
+- 🗂️➡️🔄 **After organizing** — at the end of the Organizer, the Manager asks whether to update the album right away (Y/N).
+- 🎛️ **Album** — **⬇️ Original** button; **shuffle 🔀** mode in the slideshow; photo counts on hover over years/months; emojis on the controls; colour swatches for themes and gradients; fixed phone layout.
+- 📁 Paths with `'`, `&` or `()` now work; paths with `[ ]` or `!` are detected with a clear warning.
 
 ---
 
